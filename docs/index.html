@@ -57,27 +57,13 @@
 <body class="bg-background-light dark:bg-background-dark min-h-screen flex flex-col font-sans selection:bg-primary/30 text-slate-900 dark:text-white overflow-x-hidden">
 
     <!-- Header -->
-    <header class="sticky top-0 z-50 w-full border-b border-gray-200 dark:border-white/10 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="relative flex h-16 items-center justify-between">
-                <div class="flex items-center gap-2">
-                    <div class="flex items-center justify-center size-8 rounded-lg bg-primary text-white">
-                        <span class="material-symbols-outlined text-xl">terminal</span>
-                    </div>
-                    <span class="font-display text-xl font-bold tracking-tight">Bashlet</span>
+    <header class="w-full border-b border-gray-200 dark:border-white/10 bg-background-light/80 dark:bg-background-dark/80">
+        <div class="flex h-16 items-center justify-center">
+            <div class="flex items-center gap-2">
+                <div class="flex items-center justify-center size-8 rounded-lg bg-primary text-white">
+                    <span class="material-symbols-outlined text-xl">terminal</span>
                 </div>
-                <nav class="hidden md:flex items-center gap-8">
-                    <a href="#why" class="text-sm text-slate-400 hover:text-white transition-colors">Why Bashlet</a>
-                    <a href="#features" class="text-sm text-slate-400 hover:text-white transition-colors">Features</a>
-                    <a href="#installation" class="text-sm text-slate-400 hover:text-white transition-colors">Installation</a>
-                    <a href="#usage" class="text-sm text-slate-400 hover:text-white transition-colors">Usage</a>
-                </nav>
-                <div class="flex items-center gap-4">
-                    <a class="bg-primary hover:bg-blue-600 text-white text-sm font-bold px-4 py-2 rounded-lg transition-all shadow-[0_0_15px_-3px_rgba(19,91,236,0.4)] flex items-center gap-2" href="https://github.com/ServiceWeave/bashlet">
-                        <svg aria-hidden="true" class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24"><path clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" fill-rule="evenodd"></path></svg>
-                        GitHub
-                    </a>
-                </div>
+                <span class="font-display text-xl font-bold tracking-tight">Bashlet</span>
             </div>
         </div>
     </header>
@@ -105,18 +91,7 @@
                             Give your AI agents a secure sandbox to execute shell commands. WebAssembly-powered isolation with directory mounting and session management.
                         </p>
 
-                        <div class="flex flex-wrap items-center justify-center lg:justify-start gap-4 mt-4">
-                            <a href="#installation" class="bg-primary hover:bg-blue-600 text-white h-12 px-8 rounded-lg font-bold text-base transition-all shadow-lg shadow-primary/25 flex items-center gap-2">
-                                <span class="material-symbols-outlined text-[20px]">terminal</span>
-                                Get Started
-                            </a>
-                            <a href="#usage" class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-900 dark:text-white h-12 px-8 rounded-lg font-bold text-base transition-all flex items-center gap-2">
-                                <span class="material-symbols-outlined text-[20px]">description</span>
-                                Documentation
-                            </a>
-                        </div>
-
-                        <div class="mt-6 w-full max-w-[480px] mx-auto lg:mx-0">
+                        <div class="mt-4 w-full max-w-[480px] mx-auto lg:mx-0">
                             <div class="flex items-center justify-between gap-3 px-4 py-3 bg-[#0d1117] border border-slate-800 rounded-lg font-mono text-sm shadow-sm group hover:border-primary/30 transition-colors">
                                 <div class="flex items-center gap-3 overflow-hidden">
                                     <span class="text-success shrink-0 select-none">$</span>
@@ -125,17 +100,6 @@
                                 <button onclick="copyInstall(this)" class="shrink-0 text-slate-500 hover:text-white transition-colors" title="Copy to clipboard">
                                     <span class="material-symbols-outlined text-[18px]">content_copy</span>
                                 </button>
-                            </div>
-                        </div>
-
-                        <div class="pt-6 flex items-center justify-center lg:justify-start gap-4 text-sm text-slate-500 dark:text-slate-500 font-mono">
-                            <div class="flex items-center gap-1">
-                                <span class="material-symbols-outlined text-green-500 text-[18px]">check_circle</span>
-                                <span>WASM Sandbox</span>
-                            </div>
-                            <div class="flex items-center gap-1">
-                                <span class="material-symbols-outlined text-green-500 text-[18px]">check_circle</span>
-                                <span>MIT License</span>
                             </div>
                         </div>
                     </div>
@@ -320,62 +284,6 @@
                                     <span class="px-2 py-1 bg-white/5 border border-white/10 rounded text-xs text-slate-300 font-mono">stderr: captured</span>
                                 </div>
                             </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Installation Section -->
-        <section id="installation" class="py-24 bg-[#111318]">
-            <div class="max-w-4xl mx-auto px-4">
-                <div class="text-center mb-16">
-                    <h2 class="font-display text-4xl lg:text-5xl font-bold mb-6">Installation</h2>
-                    <p class="text-lg text-slate-400 max-w-2xl mx-auto">
-                        Get up and running in under a minute.
-                    </p>
-                </div>
-
-                <div class="space-y-8">
-                    <!-- Step 1 -->
-                    <div class="glass-panel rounded-xl p-6">
-                        <div class="flex items-center gap-3 mb-4">
-                            <div class="size-8 rounded-full bg-primary/20 text-primary flex items-center justify-center font-bold text-sm">1</div>
-                            <h3 class="font-display text-xl font-bold">Install Wasmer Runtime</h3>
-                        </div>
-                        <p class="text-slate-400 text-sm mb-4">Bashlet requires the Wasmer runtime for WebAssembly execution.</p>
-                        <div class="code-block rounded-lg overflow-hidden">
-                            <div class="flex items-center justify-between px-4 py-2 bg-black/40 border-b border-white/5">
-                                <span class="text-xs text-slate-500 uppercase tracking-wider">Shell</span>
-                                <button onclick="copyCode(this)" class="text-xs text-slate-500 hover:text-white transition-colors">Copy</button>
-                            </div>
-                            <pre class="p-4 text-sm overflow-x-auto"><code>curl https://get.wasmer.io -sSfL | sh</code></pre>
-                        </div>
-                    </div>
-
-                    <!-- Step 2 -->
-                    <div class="glass-panel rounded-xl p-6">
-                        <div class="flex items-center gap-3 mb-4">
-                            <div class="size-8 rounded-full bg-primary/20 text-primary flex items-center justify-center font-bold text-sm">2</div>
-                            <h3 class="font-display text-xl font-bold">Install Bashlet</h3>
-                        </div>
-                        <div class="code-block rounded-lg overflow-hidden mb-4">
-                            <div class="flex items-center justify-between px-4 py-2 bg-black/40 border-b border-white/5">
-                                <span class="text-xs text-slate-500 uppercase tracking-wider">Quick Install (macOS/Linux)</span>
-                                <button onclick="copyCode(this)" class="text-xs text-slate-500 hover:text-white transition-colors">Copy</button>
-                            </div>
-                            <pre class="p-4 text-sm overflow-x-auto"><code>curl -fsSL https://bashlet.dev/install.sh | sh</code></pre>
-                        </div>
-
-                        <p class="text-slate-500 text-sm mb-4">Or build from source:</p>
-                        <div class="code-block rounded-lg overflow-hidden">
-                            <div class="flex items-center justify-between px-4 py-2 bg-black/40 border-b border-white/5">
-                                <span class="text-xs text-slate-500 uppercase tracking-wider">From Source</span>
-                                <button onclick="copyCode(this)" class="text-xs text-slate-500 hover:text-white transition-colors">Copy</button>
-                            </div>
-                            <pre class="p-4 text-sm overflow-x-auto"><code>git clone https://github.com/ServiceWeave/bashlet.git
-cd bashlet
-cargo build --release</code></pre>
                         </div>
                     </div>
                 </div>
