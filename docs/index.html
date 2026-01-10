@@ -4,7 +4,7 @@
     <meta charset="utf-8"/>
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
     <title>Bashlet - Sandboxed Bash for AI Agents</title>
-    <meta name="description" content="Give your AI agents a secure sandbox to execute shell commands. WebAssembly-powered isolation with directory mounting and session management.">
+    <meta name="description" content="Give your AI agents a secure sandbox to execute shell commands. Multiple isolation backends with directory mounting and session management.">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐚</text></svg>">
     <link href="https://fonts.googleapis.com" rel="preconnect"/>
     <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
@@ -88,7 +88,7 @@
                         </h1>
 
                         <p class="text-lg text-slate-600 dark:text-slate-400 leading-relaxed max-w-lg mx-auto lg:mx-0">
-                            Give your AI agents a secure sandbox to execute shell commands. WebAssembly-powered isolation with directory mounting and session management.
+                            Give your AI agents a secure sandbox to execute shell commands. Multiple isolation backends with directory mounting and session management.
                         </p>
 
                         <div class="mt-4 w-full max-w-[480px] mx-auto lg:mx-0">
@@ -229,14 +229,14 @@
                                 <span class="material-symbols-outlined text-3xl">shield_lock</span>
                             </div>
                             <div>
-                                <h3 class="font-display text-2xl font-bold mb-3">WebAssembly Isolation</h3>
+                                <h3 class="font-display text-2xl font-bold mb-3">Secure Isolation</h3>
                                 <p class="text-slate-400 text-base leading-relaxed max-w-md">
-                                    Every session runs in a <span class="text-white font-medium">Wasmer-powered sandbox</span> providing complete isolation from your host system.
-                                    Agents reason about actions while the sandbox handles execution safely.
+                                    Every session runs in a <span class="text-white font-medium">sandboxed environment</span> providing complete isolation from your host system.
+                                    Choose from multiple backends including WebAssembly and Firecracker microVMs.
                                 </p>
                             </div>
                             <div class="mt-8 font-mono text-xs text-slate-500 bg-black/40 p-4 rounded-lg border border-white/5 w-fit">
-                                isolation: <span class="text-success">"wasm-sandbox"</span><br/>
+                                isolation: <span class="text-success">"sandbox"</span><br/>
                                 host_access: <span class="text-primary">"mounted-dirs-only"</span>
                             </div>
                         </div>
