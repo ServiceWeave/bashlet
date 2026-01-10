@@ -1,0 +1,22 @@
+# Bashlet Configuration
+
+[agent]
+default_provider = "anthropic"
+max_iterations = 50
+temperature = 0.0
+max_tokens = 4096
+
+[sandbox]
+default_workdir = "/workspace"
+memory_limit_mb = 256
+timeout_seconds = 300
+
+[providers.anthropic]
+api_key_env = "ANTHROPIC_API_KEY"
+default_model = "claude-sonnet-4-20250514"
+models = ["claude-sonnet-4-20250514", "claude-opus-4-20250514"]
+
+[providers.openai]
+api_key_env = "OPENAI_API_KEY"
+default_model = "gpt-4o"
+models = ["gpt-4o", "gpt-4o-mini"]
