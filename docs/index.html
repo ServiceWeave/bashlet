@@ -8,7 +8,7 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐚</text></svg>">
     <link href="https://fonts.googleapis.com" rel="preconnect"/>
     <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Noto+Sans:wght@400;500;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <script>
@@ -17,270 +17,434 @@
             theme: {
                 extend: {
                     colors: {
-                        "primary": "#135bec",
-                        "background-light": "#f6f6f8",
-                        "background-dark": "#101622",
-                        "card-dark": "#1a1f2b",
-                        "card-border": "rgba(255, 255, 255, 0.1)",
-                        "success": "#22c55e",
+                        "term-bg": "#000000",
+                        "term-green": "#4AF626",
+                        "term-amber": "#FFB000",
+                        "term-gray": "#666666",
+                        "term-red": "#FF3333",
+                        "term-blue": "#3b8eea",
+                        "term-dim": "#333333",
+                        "term-border": "#333333"
                     },
                     fontFamily: {
-                        "display": ["Space Grotesk", "sans-serif"],
-                        "sans": ["Noto Sans", "sans-serif"],
-                        "mono": ["Fira Code", "monospace"],
+                        "mono": ["JetBrains Mono", "monospace"],
+                        "sans": ["JetBrains Mono", "monospace"],
                     },
-                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "2xl": "1rem", "full": "9999px"},
+                    boxShadow: {
+                        "term-glow": "0 0 10px rgba(74, 246, 38, 0.3)",
+                        "term-amber-glow": "0 0 10px rgba(255, 176, 0, 0.3)",
+                    },
+                    animation: {
+                        "cursor": "cursor .75s step-end infinite",
+                        "scanline": "scanline 8s linear infinite",
+                    },
+                    keyframes: {
+                        cursor: {
+                            "0%, 100%": { opacity: "1" },
+                            "50%": { opacity: "0" },
+                        },
+                        scanline: {
+                            "0%": { transform: "translateY(-100%)" },
+                            "100%": { transform: "translateY(100%)" }
+                        }
+                    }
                 },
             },
         }
     </script>
-    <style>
-        .scrollbar-hide::-webkit-scrollbar {
-            display: none;
+    <style type="text/tailwindcss">
+        body {
+            @apply bg-term-bg text-term-green font-mono selection:bg-term-green selection:text-black;
         }
-        .glass-panel {
-            background: rgba(26, 31, 43, 0.6);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
+        .crt::before {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            z-index: 2;
+            background-size: 100% 2px, 3px 100%;
+            pointer-events: none;
         }
-        .code-block {
-            background: #0d1117;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+        .crt::after {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background: rgba(18, 16, 16, 0.1);
+            opacity: 0;
+            z-index: 2;
+            pointer-events: none;
+            animation: flicker 0.15s infinite;
         }
-        .comment { color: #8b949e; }
-        .command { color: #22c55e; }
-        .string { color: #a5d6ff; }
-        .flag { color: #ff7b72; }
+        @keyframes flicker {
+            0% { opacity: 0.02795 }
+            5% { opacity: 0.04828 }
+            10% { opacity: 0.00762 }
+            15% { opacity: 0.08985 }
+            20% { opacity: 0.07545 }
+            25% { opacity: 0.07185 }
+            30% { opacity: 0.06202 }
+            35% { opacity: 0.08581 }
+            40% { opacity: 0.03831 }
+            45% { opacity: 0.00067 }
+            50% { opacity: 0.00755 }
+            55% { opacity: 0.03713 }
+            60% { opacity: 0.03259 }
+            65% { opacity: 0.06649 }
+            70% { opacity: 0.0101 }
+            75% { opacity: 0.09117 }
+            80% { opacity: 0.09455 }
+            85% { opacity: 0.00222 }
+            90% { opacity: 0.04655 }
+            95% { opacity: 0.0779 }
+            100% { opacity: 0.00445 }
+        }
+        .typing-cursor::after {
+            content: '\2588';
+            animation: cursor 1s infinite;
+            margin-left: 2px;
+            color: #4AF626;
+        }
+        .term-btn:hover {
+            box-shadow: 4px 4px 0px #4AF626;
+            transform: translate(-2px, -2px);
+        }
+        .term-btn-amber:hover {
+            box-shadow: 4px 4px 0px #FFB000;
+            transform: translate(-2px, -2px);
+        }
+        .text-dim { @apply text-term-gray; }
+        .comment { color: #666666; }
+        .command { color: #4AF626; }
+        .string { color: #3b8eea; }
+        .flag { color: #FFB000; }
     </style>
 </head>
-<body class="bg-background-light dark:bg-background-dark min-h-screen flex flex-col font-sans selection:bg-primary/30 text-slate-900 dark:text-white overflow-x-hidden">
+<body class="min-h-screen flex flex-col overflow-x-hidden crt">
 
-    <!-- Logo -->
-    <div class="flex items-center justify-center pt-8">
-        <div class="flex items-center gap-2">
-            <div class="flex items-center justify-center size-8 rounded-lg bg-primary text-white">
-                <span class="material-symbols-outlined text-xl">terminal</span>
+    <!-- Header -->
+    <header class="sticky top-0 z-50 w-full bg-term-bg border-b border-term-dim">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="relative flex h-12 items-center justify-between font-mono text-sm">
+                <div class="flex items-center gap-4">
+                    <span class="text-term-gray select-none">root@bashlet:~#</span>
+                    <span class="font-bold text-white tracking-tight">./Bashlet</span>
+                </div>
+                <div class="flex items-center gap-6 text-term-gray">
+                    <nav class="hidden md:flex gap-6">
+                        <a class="hover:text-term-green hover:underline decoration-2 underline-offset-4" href="#usage">[ --usage ]</a>
+                        <a class="hover:text-term-green hover:underline decoration-2 underline-offset-4" href="#features">[ --features ]</a>
+                        <a class="hover:text-term-green hover:underline decoration-2 underline-offset-4" href="#commands">[ --commands ]</a>
+                    </nav>
+                    <div class="h-4 w-px bg-term-dim hidden md:block"></div>
+                    <a class="text-term-green hover:text-white flex items-center gap-2 group" href="https://github.com/ServiceWeave/bashlet">
+                        <span class="group-hover:animate-pulse">&gt;</span> git clone bashlet
+                    </a>
+                </div>
             </div>
-            <span class="font-display text-xl font-bold tracking-tight">Bashlet</span>
         </div>
-    </div>
+    </header>
 
     <main class="flex-grow">
         <!-- Hero Section -->
-        <section class="relative pt-20 pb-32 overflow-hidden">
-            <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[500px] bg-primary/20 blur-[120px] rounded-full pointer-events-none opacity-40"></div>
+        <section class="relative pt-16 pb-24 overflow-hidden border-b border-dashed border-term-dim">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-                <div class="grid lg:grid-cols-2 gap-12 lg:gap-8 items-center">
-                    <div class="flex flex-col gap-6 max-w-2xl mx-auto lg:mx-0 text-center lg:text-left">
-                        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 w-fit mx-auto lg:mx-0">
-                            <span class="relative flex h-2 w-2">
-                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-                                <span class="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
-                            </span>
-                            <span class="text-xs font-bold text-primary tracking-wide uppercase">Open Source</span>
+                <div class="grid lg:grid-cols-2 gap-12 lg:gap-16 items-start">
+                    <div class="flex flex-col gap-6 pt-4">
+                        <div class="font-mono text-xs text-term-gray mb-2">
+                            Last login: <span id="current-date">Tue Oct 24 10:42:15</span> on ttys001
                         </div>
 
-                        <h1 class="font-display text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.1]">
-                            Sandboxed <span class="text-transparent bg-clip-text bg-gradient-to-r from-primary to-blue-300">Bash</span> for AI Agents
+                        <div class="inline-flex items-center gap-2 px-2 py-1 border border-term-green/30 w-fit bg-term-green/5 text-term-green">
+                            <span class="w-2 h-2 bg-term-green animate-pulse"></span>
+                            <span class="text-xs uppercase tracking-wider">Open Source</span>
+                        </div>
+
+                        <h1 class="font-mono text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-none text-white">
+                            Sandboxed <br/>
+                            <span class="text-term-green">Bash</span> for <br/>
+                            <span class="bg-term-green text-black px-1">AI Agents</span>
                         </h1>
 
-                        <p class="text-lg text-slate-600 dark:text-slate-400 leading-relaxed max-w-lg mx-auto lg:mx-0">
-                            Give your AI agents a secure sandbox to execute shell commands. Multiple isolation backends with directory mounting and session management.
-                        </p>
+                        <div class="border-l-2 border-term-dim pl-4 py-2">
+                            <p class="text-lg text-term-gray leading-relaxed max-w-lg">
+                                // Give your AI agents a secure sandbox.<br/>
+                                // Execute shell commands safely.<br/>
+                                // Multiple isolation backends available.
+                            </p>
+                        </div>
 
-                        <div class="mt-4 w-full max-w-[480px] mx-auto lg:mx-0">
-                            <div class="flex items-center justify-between gap-3 px-4 py-3 bg-[#0d1117] border border-slate-800 rounded-lg font-mono text-sm shadow-sm group hover:border-primary/30 transition-colors">
-                                <div class="flex items-center gap-3 overflow-hidden">
-                                    <span class="text-success shrink-0 select-none">$</span>
-                                    <span class="text-slate-300 truncate">curl -fsSL https://bashlet.dev/install.sh | sh</span>
+                        <div class="flex flex-wrap items-center gap-4 mt-6">
+                            <a href="https://github.com/ServiceWeave/bashlet" class="bg-term-green text-black border border-term-green h-12 px-6 font-bold text-sm hover:bg-transparent hover:text-term-green transition-all term-btn flex items-center gap-2">
+                                <span class="material-symbols-outlined text-[18px]">terminal</span>
+                                $ bashlet init
+                            </a>
+                            <a href="#usage" class="bg-transparent text-term-amber border border-term-amber h-12 px-6 font-bold text-sm hover:bg-term-amber hover:text-black transition-all term-btn-amber flex items-center gap-2">
+                                <span class="material-symbols-outlined text-[18px]">description</span>
+                                man bashlet
+                            </a>
+                        </div>
+
+                        <div class="mt-8 w-full max-w-[480px]">
+                            <div class="flex items-center justify-between gap-3 px-4 py-3 bg-term-dim/30 border border-term-dim font-mono text-sm hover:border-term-green transition-colors group relative">
+                                <div class="absolute -top-3 left-2 bg-term-bg px-1 text-xs text-term-gray">quick_install.sh</div>
+                                <div class="flex items-center gap-3 overflow-hidden w-full">
+                                    <span class="text-term-green shrink-0 select-none">$</span>
+                                    <span class="text-white truncate">curl -fsSL https://bashlet.dev/install.sh | sh</span>
                                 </div>
-                                <button onclick="copyInstall(this)" class="shrink-0 text-slate-500 hover:text-white transition-colors" title="Copy to clipboard">
-                                    <span class="material-symbols-outlined text-[18px]">content_copy</span>
+                                <button onclick="copyInstall(this)" class="shrink-0 text-term-gray hover:text-white transition-colors" title="Copy">
+                                    <span class="material-symbols-outlined text-[16px]">content_copy</span>
                                 </button>
+                            </div>
+                        </div>
+
+                        <div class="pt-4 flex items-center gap-6 text-xs text-term-gray font-mono uppercase tracking-widest">
+                            <div class="flex items-center gap-2">
+                                <span class="text-term-green">[ OK ]</span>
+                                <span>Sandboxed</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="text-term-green">[ OK ]</span>
+                                <span>Open Source</span>
                             </div>
                         </div>
                     </div>
 
                     <!-- Terminal Demo -->
-                    <div class="relative w-full max-w-lg mx-auto lg:max-w-none">
-                        <div class="absolute inset-0 bg-gradient-to-tr from-primary/30 to-purple-500/20 rounded-2xl blur-xl transform rotate-3 scale-95"></div>
-                        <div class="relative rounded-xl overflow-hidden bg-[#0d1117] border border-slate-800 shadow-2xl">
-                            <div class="flex items-center justify-between px-4 py-3 bg-[#161b22] border-b border-slate-800">
-                                <div class="flex items-center gap-2">
-                                    <div class="size-3 rounded-full bg-red-500/80"></div>
-                                    <div class="size-3 rounded-full bg-yellow-500/80"></div>
-                                    <div class="size-3 rounded-full bg-green-500/80"></div>
+                    <div class="relative w-full mt-8 lg:mt-0">
+                        <div class="relative border border-term-border bg-black shadow-2xl">
+                            <div class="flex items-center justify-between px-3 py-2 bg-term-dim border-b border-term-border">
+                                <div class="flex items-center gap-4">
+                                    <span class="text-xs text-gray-400">bash -- 80x24</span>
                                 </div>
-                                <div class="flex items-center gap-1.5 opacity-60">
-                                    <span class="material-symbols-outlined text-[14px] text-slate-400">lock</span>
-                                    <span class="text-xs font-mono text-slate-400">bashlet-sandbox</span>
+                                <div class="flex gap-1.5">
+                                    <div class="w-3 h-3 bg-term-gray opacity-50 hover:opacity-100"></div>
+                                    <div class="w-3 h-3 border border-term-gray opacity-50 hover:opacity-100"></div>
+                                    <div class="w-3 h-3 border border-term-gray opacity-50 hover:opacity-100"></div>
                                 </div>
-                                <div class="size-3"></div>
                             </div>
-                            <div class="p-6 font-mono text-sm leading-relaxed min-h-[320px] text-slate-300">
+                            <div class="p-4 font-mono text-sm leading-relaxed min-h-[400px] text-gray-300 bg-opacity-90 bg-black">
                                 <div class="flex gap-2">
-                                    <span class="text-success">$</span>
+                                    <span class="text-term-green">➜</span>
+                                    <span class="text-term-blue">~</span>
                                     <span>bashlet create --name demo --mount ./src:/workspace</span>
                                 </div>
-                                <div class="pl-4 mt-2 mb-4 text-slate-500">
-                                    <span class="text-success">Session 'demo' created</span>
+                                <div class="pl-4 mt-1 mb-4 text-term-gray text-xs">
+                                    <span>[INFO] Initializing sandbox...</span><br/>
+                                    <span>[INFO] Setting up isolation...</span><br/>
+                                    <span class="text-term-green">[SUCCESS] Session 'demo' created</span>
                                 </div>
                                 <div class="flex gap-2">
-                                    <span class="text-success">$</span>
+                                    <span class="text-term-green">➜</span>
+                                    <span class="text-term-blue">~</span>
                                     <span>bashlet run demo "ls /workspace"</span>
                                 </div>
-                                <div class="pl-4 mt-2 mb-4">
+                                <div class="pl-4 mt-1 mb-4">
                                     <span class="text-white">main.rs  lib.rs  tests/</span>
                                 </div>
                                 <div class="flex gap-2">
-                                    <span class="text-success">$</span>
-                                    <span>bashlet run demo "cat /workspace/main.rs | head -5"</span>
+                                    <span class="text-term-green">➜</span>
+                                    <span class="text-term-blue">~</span>
+                                    <span>bashlet run demo "cat /workspace/main.rs | head -3"</span>
                                 </div>
-                                <div class="pl-4 mt-2 mb-4 text-slate-400">
-                                    <span>fn main() {</span><br/>
-                                    <span>    println!("Hello, world!");</span><br/>
-                                    <span>}</span>
+                                <div class="pl-4 mt-1 mb-4 text-term-gray text-xs">
+                                    <span class="text-white">fn main() {</span><br/>
+                                    <span class="text-white">    println!("Hello, world!");</span><br/>
+                                    <span class="text-white">}</span>
                                 </div>
                                 <div class="flex gap-2">
-                                    <span class="text-success">$</span>
+                                    <span class="text-term-green">➜</span>
+                                    <span class="text-term-blue">~</span>
                                     <span>bashlet terminate demo</span>
                                 </div>
-                                <div class="pl-4 mt-2 mb-4 text-slate-500">
-                                    <span class="text-success">Session terminated</span>
+                                <div class="pl-4 mt-1 mb-4 text-term-gray text-xs">
+                                    <span>[INFO] Tearing down sandbox...</span><br/>
+                                    <span class="text-term-green">[EXIT] Session terminated. Clean exit.</span>
                                 </div>
-                                <div class="flex gap-2 animate-pulse">
-                                    <span class="text-success">$</span>
-                                    <span class="w-2.5 h-5 bg-slate-400 block"></span>
+                                <div class="flex gap-2">
+                                    <span class="text-term-green">➜</span>
+                                    <span class="text-term-blue">~</span>
+                                    <span class="typing-cursor"></span>
                                 </div>
                             </div>
                         </div>
+                        <div class="absolute -bottom-2 -right-2 w-full h-full border-r-2 border-b-2 border-term-dim -z-10"></div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Why Bashlet Section -->
-        <section id="why" class="py-24 relative overflow-hidden bg-background-dark/30">
+        <!-- Why Section -->
+        <section class="py-24 relative overflow-hidden bg-black">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="text-center mb-16">
-                    <h2 class="font-display text-4xl lg:text-5xl font-bold mb-6">Why Your Agents Need a Shell</h2>
-                    <p class="text-lg text-slate-600 dark:text-slate-300 max-w-3xl mx-auto leading-relaxed">
-                        LLMs excel at reasoning, but they need the right tools to act. Give your agents the same capabilities as a human developer with filesystem access and real shell execution.
+                    <div class="inline-block border-b border-term-green pb-1 mb-6">
+                        <h2 class="font-mono text-3xl font-bold uppercase text-white tracking-widest">
+                            <span class="text-term-green">./</span>Why_Your_Agents_Need_A_Shell
+                        </h2>
+                    </div>
+                    <p class="text-term-gray max-w-2xl mx-auto font-mono text-sm">
+                        # LLMs excel at reasoning, but they need tools.<br/>
+                        # Give agents the same capabilities as human developers.
                     </p>
-                    <div class="mt-8 inline-block px-6 py-2 rounded-full border border-primary/30 bg-primary/10 backdrop-blur-sm">
-                        <p class="font-mono text-sm text-primary font-semibold">"LLMs have seen grep, cat, find, and awk billions of times during training."</p>
+                    <div class="mt-8 bg-term-dim/30 border border-term-dim p-4 inline-block max-w-xl">
+                        <p class="font-mono text-xs text-term-amber">
+                            echo "LLMs have seen grep, cat, find, and awk billions of times." &gt;&gt; manifesto.txt
+                        </p>
                     </div>
                 </div>
 
                 <div class="grid md:grid-cols-3 gap-8">
-                    <div class="glass-panel p-8 rounded-xl border border-white/5 hover:border-primary/50 transition-all duration-300 group">
-                        <div class="size-12 rounded-lg bg-blue-500/10 text-blue-400 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                            <span class="material-symbols-outlined text-3xl">folder_open</span>
+                    <div class="border border-term-dim p-6 hover:border-term-blue transition-colors group relative bg-black">
+                        <div class="absolute top-0 right-0 p-2 text-term-dim group-hover:text-term-blue">
+                            ┌──┐
                         </div>
-                        <h3 class="text-xl font-bold mb-3 text-white">Context via Filesystem</h3>
-                        <p class="text-slate-400 text-sm leading-relaxed">
-                            Instead of prompt stuffing or vector search, let agents read local project files, traverse directories, and analyze structure to understand codebases deeply.
+                        <div class="text-term-blue mb-4 group-hover:animate-pulse">
+                            <span class="material-symbols-outlined text-4xl">folder_open</span>
+                        </div>
+                        <h3 class="text-lg font-bold mb-3 text-white uppercase tracking-wider">01_Filesystem</h3>
+                        <p class="text-term-gray text-xs leading-relaxed font-mono">
+                            &gt; Agents read local project files<br/>
+                            &gt; Traverse directories<br/>
+                            &gt; Analyze structure recursively
                         </p>
+                        <div class="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-term-blue to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
                     </div>
 
-                    <div class="glass-panel p-8 rounded-xl border border-white/5 hover:border-primary/50 transition-all duration-300 group">
-                        <div class="size-12 rounded-lg bg-green-500/10 text-green-400 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                            <span class="material-symbols-outlined text-3xl">check_circle</span>
+                    <div class="border border-term-dim p-6 hover:border-term-green transition-colors group relative bg-black">
+                        <div class="absolute top-0 right-0 p-2 text-term-dim group-hover:text-term-green">
+                            ┌──┐
                         </div>
-                        <h3 class="text-xl font-bold mb-3 text-white">Validation via Execution</h3>
-                        <p class="text-slate-400 text-sm leading-relaxed">
-                            Don't just trust the output. Let agents run tests, linters, or compile code to verify correctness before proposing changes to the user.
+                        <div class="text-term-green mb-4 group-hover:animate-pulse">
+                            <span class="material-symbols-outlined text-4xl">check_circle</span>
+                        </div>
+                        <h3 class="text-lg font-bold mb-3 text-white uppercase tracking-wider">02_Validation</h3>
+                        <p class="text-term-gray text-xs leading-relaxed font-mono">
+                            &gt; Run unit tests<br/>
+                            &gt; Execute linters<br/>
+                            &gt; Compile code to verify
                         </p>
+                        <div class="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-term-green to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
                     </div>
 
-                    <div class="glass-panel p-8 rounded-xl border border-white/5 hover:border-primary/50 transition-all duration-300 group">
-                        <div class="size-12 rounded-lg bg-purple-500/10 text-purple-400 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                            <span class="material-symbols-outlined text-3xl">construction</span>
+                    <div class="border border-term-dim p-6 hover:border-term-amber transition-colors group relative bg-black">
+                        <div class="absolute top-0 right-0 p-2 text-term-dim group-hover:text-term-amber">
+                            ┌──┐
                         </div>
-                        <h3 class="text-xl font-bold mb-3 text-white">Native LLM Capabilities</h3>
-                        <p class="text-slate-400 text-sm leading-relaxed">
-                            Tools like <code class="bg-white/10 px-1 py-0.5 rounded text-xs">grep</code>, <code class="bg-white/10 px-1 py-0.5 rounded text-xs">cat</code>, and <code class="bg-white/10 px-1 py-0.5 rounded text-xs">find</code> are native operations that models understand deeply from pretraining.
+                        <div class="text-term-amber mb-4 group-hover:animate-pulse">
+                            <span class="material-symbols-outlined text-4xl">construction</span>
+                        </div>
+                        <h3 class="text-lg font-bold mb-3 text-white uppercase tracking-wider">03_Tooling</h3>
+                        <p class="text-term-gray text-xs leading-relaxed font-mono">
+                            &gt; Access standard CLI tools<br/>
+                            &gt; <span class="text-white">git</span>, <span class="text-white">npm</span>, <span class="text-white">pip</span><br/>
+                            &gt; Full developer capabilities
                         </p>
+                        <div class="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-term-amber to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
                     </div>
                 </div>
             </div>
         </section>
 
         <!-- Features Section -->
-        <section id="features" class="py-24 relative">
+        <section id="features" class="py-24 relative border-t border-term-dim bg-term-bg">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex flex-col items-center text-center mb-16 gap-4">
-                    <h2 class="font-display text-4xl lg:text-5xl font-bold">Engineered for Security</h2>
-                    <p class="text-lg text-slate-600 dark:text-slate-400 max-w-2xl">
-                        A robust runtime environment designed for the unpredictability of LLM-generated commands.
+                    <h2 class="font-mono text-3xl lg:text-4xl font-bold uppercase text-white">
+                        <span class="text-term-red">ROOT</span>_ACCESS_CONTROL
+                    </h2>
+                    <p class="text-term-gray text-sm max-w-2xl font-mono">
+                        // Robust runtime environment designed for unpredictability.<br/>
+                        // Architecture Diagram follows:
                     </p>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 auto-rows-[minmax(280px,auto)]">
-                    <div class="md:col-span-2 glass-panel rounded-2xl p-8 relative overflow-hidden group hover:border-primary/40 transition-colors">
-                        <div class="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
-                            <span class="material-symbols-outlined text-[120px]">security</span>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="md:col-span-2 border border-term-dim bg-black p-8 relative overflow-hidden group">
+                        <div class="absolute top-0 right-0 opacity-10 font-mono text-[10px] text-term-green leading-[8px] pointer-events-none w-1/2 h-full overflow-hidden text-right">
+                            010101010101010101
+                            101010101010101010
+                            001100110011001100
+                            110011001100110011
+                            010101010101010101
+                            101010101010101010
                         </div>
-                        <div class="relative z-10 h-full flex flex-col justify-between">
-                            <div class="size-12 rounded-lg bg-primary/20 flex items-center justify-center text-primary mb-6">
-                                <span class="material-symbols-outlined text-3xl">shield_lock</span>
-                            </div>
+                        <div class="relative z-10 flex flex-col h-full justify-between">
                             <div>
-                                <h3 class="font-display text-2xl font-bold mb-3">Secure Isolation</h3>
-                                <p class="text-slate-400 text-base leading-relaxed max-w-md">
-                                    Every session runs in a <span class="text-white font-medium">sandboxed environment</span> providing complete isolation from your host system.
-                                    Choose from multiple backends including WebAssembly and Firecracker microVMs.
+                                <div class="flex items-center gap-3 mb-4">
+                                    <span class="material-symbols-outlined text-term-green text-3xl">shield_lock</span>
+                                    <h3 class="font-mono text-xl font-bold text-white uppercase">Secure Isolation</h3>
+                                </div>
+                                <p class="text-term-gray text-sm leading-relaxed max-w-md font-mono">
+                                    Every session runs in a <span class="text-white">sandboxed environment</span>. <br/>
+                                    Choose from multiple backends: <span class="text-term-green">WASM</span>, <span class="text-term-blue">Firecracker</span>.<br/>
+                                    Host isolation: <span class="text-term-green">ENABLED</span>.
                                 </p>
                             </div>
-                            <div class="mt-8 font-mono text-xs text-slate-500 bg-black/40 p-4 rounded-lg border border-white/5 w-fit">
-                                isolation: <span class="text-success">"sandbox"</span><br/>
-                                host_access: <span class="text-primary">"mounted-dirs-only"</span>
+                            <div class="mt-8 font-mono text-xs text-term-gray border-t border-dashed border-term-dim pt-4 w-full">
+                                <div class="flex justify-between">
+                                    <span>isolation_level:</span>
+                                    <span class="text-term-green">"sandbox-hardened"</span>
+                                </div>
+                                <div class="flex justify-between mt-1">
+                                    <span>host_access:</span>
+                                    <span class="text-term-blue">"mounted-dirs-only"</span>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="glass-panel rounded-2xl p-8 relative overflow-hidden group hover:border-primary/40 transition-colors">
-                        <div class="absolute inset-0 bg-gradient-to-b from-transparent to-primary/5"></div>
+                    <div class="border border-term-dim bg-black p-6 relative overflow-hidden group hover:border-term-amber transition-colors">
                         <div class="relative z-10">
-                            <div class="size-12 rounded-lg bg-yellow-500/20 flex items-center justify-center text-yellow-500 mb-6">
-                                <span class="material-symbols-outlined text-3xl">folder_shared</span>
+                            <div class="flex items-center gap-3 mb-4">
+                                <span class="material-symbols-outlined text-term-amber text-3xl">folder_shared</span>
+                                <h3 class="font-mono text-lg font-bold text-white uppercase">Dir Mounting</h3>
                             </div>
-                            <h3 class="font-display text-2xl font-bold mb-3">Directory Mounting</h3>
-                            <p class="text-slate-400 text-sm">
-                                Expose only the directories your agent needs. Mount project folders at specific paths while keeping everything else inaccessible.
+                            <p class="text-term-gray text-xs font-mono">
+                                &gt; Expose only needed dirs<br/>
+                                &gt; Mount at specific paths<br/>
+                                &gt; Everything else blocked
                             </p>
                         </div>
                     </div>
 
-                    <div class="glass-panel rounded-2xl p-8 relative overflow-hidden group hover:border-primary/40 transition-colors">
+                    <div class="border border-term-dim bg-black p-6 relative overflow-hidden group hover:border-term-blue transition-colors">
                         <div class="relative z-10">
-                            <div class="size-12 rounded-lg bg-purple-500/20 flex items-center justify-center text-purple-500 mb-6">
-                                <span class="material-symbols-outlined text-3xl">history</span>
+                            <div class="flex items-center gap-3 mb-4">
+                                <span class="material-symbols-outlined text-term-blue text-3xl">history</span>
+                                <h3 class="font-mono text-lg font-bold text-white uppercase">Sessions</h3>
                             </div>
-                            <h3 class="font-display text-2xl font-bold mb-3">Session Management</h3>
-                            <p class="text-slate-400 text-sm">
-                                Create persistent sessions that maintain configuration across multiple commands. Perfect for multi-step agent workflows.
+                            <p class="text-term-gray text-xs font-mono">
+                                &gt; Persistent config<br/>
+                                &gt; Multi-step workflows<br/>
+                                &gt; State preserved
                             </p>
                         </div>
                     </div>
 
-                    <div class="md:col-span-2 glass-panel rounded-2xl p-8 relative overflow-hidden group hover:border-primary/40 transition-colors">
-                        <div class="relative z-10 flex flex-col md:flex-row gap-8 h-full">
-                            <div class="flex-1 flex flex-col justify-between">
-                                <div>
-                                    <div class="size-12 rounded-lg bg-green-500/20 flex items-center justify-center text-green-500 mb-6">
-                                        <span class="material-symbols-outlined text-3xl">visibility</span>
-                                    </div>
-                                    <h3 class="font-display text-2xl font-bold mb-3">Full Debuggability</h3>
-                                    <p class="text-slate-400 text-base leading-relaxed">
-                                        The entire execution path remains visible. See exactly what commands your agent ran, what files it read, and what output it produced. No black boxes.
-                                    </p>
-                                </div>
-                                <div class="mt-6 flex gap-3">
-                                    <span class="px-2 py-1 bg-white/5 border border-white/10 rounded text-xs text-slate-300 font-mono">stdout: captured</span>
-                                    <span class="px-2 py-1 bg-white/5 border border-white/10 rounded text-xs text-slate-300 font-mono">stderr: captured</span>
-                                </div>
+                    <div class="md:col-span-2 border border-term-dim bg-black p-8 relative overflow-hidden group hover:border-white transition-colors">
+                        <div class="absolute top-0 right-0 p-4">
+                            <span class="material-symbols-outlined text-term-dim text-6xl">visibility</span>
+                        </div>
+                        <div class="relative z-10">
+                            <div class="flex items-center gap-3 mb-4">
+                                <span class="material-symbols-outlined text-white text-3xl">bug_report</span>
+                                <h3 class="font-mono text-xl font-bold text-white uppercase">Full Debuggability</h3>
+                            </div>
+                            <p class="text-term-gray text-sm leading-relaxed max-w-lg font-mono">
+                                The entire execution path remains visible. <br/>
+                                See commands, file access, and output. No black boxes.
+                            </p>
+                            <div class="mt-6 flex gap-3 font-mono text-xs">
+                                <span class="px-2 py-1 bg-term-dim/50 border border-term-dim text-white">stdout: captured</span>
+                                <span class="px-2 py-1 bg-term-dim/50 border border-term-dim text-white">stderr: captured</span>
                             </div>
                         </div>
                     </div>
@@ -289,27 +453,31 @@
         </section>
 
         <!-- Usage Section -->
-        <section id="usage" class="py-24 relative">
+        <section id="usage" class="py-24 bg-black border-t border-term-dim">
             <div class="max-w-4xl mx-auto px-4">
                 <div class="text-center mb-16">
-                    <h2 class="font-display text-4xl lg:text-5xl font-bold mb-6">Usage</h2>
-                    <p class="text-lg text-slate-400 max-w-2xl mx-auto">
-                        Simple CLI for one-shot commands, persistent sessions, and AI agent integration.
+                    <div class="inline-block border-b border-term-green pb-1 mb-6">
+                        <h2 class="font-mono text-3xl font-bold uppercase text-white tracking-widest">
+                            <span class="text-term-green">./</span>Usage
+                        </h2>
+                    </div>
+                    <p class="text-term-gray text-sm max-w-2xl mx-auto font-mono">
+                        # Simple CLI for one-shot commands, persistent sessions, and AI agent integration.
                     </p>
                 </div>
 
                 <div class="space-y-12">
                     <!-- One-Shot Execution -->
                     <div>
-                        <h3 class="font-display text-2xl font-bold mb-4 flex items-center gap-3">
-                            <span class="material-symbols-outlined text-primary">bolt</span>
-                            One-Shot Execution
+                        <h3 class="font-mono text-xl font-bold mb-4 flex items-center gap-3 text-white uppercase">
+                            <span class="material-symbols-outlined text-term-amber">bolt</span>
+                            01_One-Shot_Execution
                         </h3>
-                        <p class="text-slate-400 mb-4">Run a single command in an isolated sandbox.</p>
-                        <div class="code-block rounded-lg overflow-hidden">
-                            <div class="flex items-center justify-between px-4 py-2 bg-black/40 border-b border-white/5">
-                                <span class="text-xs text-slate-500 uppercase tracking-wider">Shell</span>
-                                <button onclick="copyCode(this)" class="text-xs text-slate-500 hover:text-white transition-colors">Copy</button>
+                        <p class="text-term-gray mb-4 text-sm font-mono"># Run a single command in an isolated sandbox.</p>
+                        <div class="border border-term-dim bg-black overflow-hidden">
+                            <div class="flex items-center justify-between px-4 py-2 bg-term-dim/50 border-b border-term-dim">
+                                <span class="text-xs text-term-gray uppercase tracking-wider">Shell</span>
+                                <button onclick="copyCode(this)" class="text-xs text-term-gray hover:text-white transition-colors">Copy</button>
                             </div>
                             <pre class="p-4 text-sm overflow-x-auto"><code><span class="comment"># Basic command</span>
 bashlet exec <span class="string">"echo hello world"</span>
@@ -324,15 +492,15 @@ bashlet exec <span class="flag">--env</span> MESSAGE=<span class="string">"Hello
 
                     <!-- Session Management -->
                     <div>
-                        <h3 class="font-display text-2xl font-bold mb-4 flex items-center gap-3">
-                            <span class="material-symbols-outlined text-primary">history</span>
-                            Session Management
+                        <h3 class="font-mono text-xl font-bold mb-4 flex items-center gap-3 text-white uppercase">
+                            <span class="material-symbols-outlined text-term-blue">history</span>
+                            02_Session_Management
                         </h3>
-                        <p class="text-slate-400 mb-4">Create persistent sandbox sessions that maintain configuration across commands.</p>
-                        <div class="code-block rounded-lg overflow-hidden">
-                            <div class="flex items-center justify-between px-4 py-2 bg-black/40 border-b border-white/5">
-                                <span class="text-xs text-slate-500 uppercase tracking-wider">Shell</span>
-                                <button onclick="copyCode(this)" class="text-xs text-slate-500 hover:text-white transition-colors">Copy</button>
+                        <p class="text-term-gray mb-4 text-sm font-mono"># Create persistent sandbox sessions that maintain configuration.</p>
+                        <div class="border border-term-dim bg-black overflow-hidden">
+                            <div class="flex items-center justify-between px-4 py-2 bg-term-dim/50 border-b border-term-dim">
+                                <span class="text-xs text-term-gray uppercase tracking-wider">Shell</span>
+                                <button onclick="copyCode(this)" class="text-xs text-term-gray hover:text-white transition-colors">Copy</button>
                             </div>
                             <pre class="p-4 text-sm overflow-x-auto"><code><span class="comment"># Create a session</span>
 bashlet create <span class="flag">--name</span> my-session <span class="flag">--mount</span> ./src:/workspace
@@ -351,15 +519,15 @@ bashlet terminate my-session</code></pre>
 
                     <!-- AI Agent Mode -->
                     <div>
-                        <h3 class="font-display text-2xl font-bold mb-4 flex items-center gap-3">
-                            <span class="material-symbols-outlined text-primary">smart_toy</span>
-                            AI Agent Mode
+                        <h3 class="font-mono text-xl font-bold mb-4 flex items-center gap-3 text-white uppercase">
+                            <span class="material-symbols-outlined text-term-green">smart_toy</span>
+                            03_AI_Agent_Mode
                         </h3>
-                        <p class="text-slate-400 mb-4">Run an AI agent that executes commands in the sandbox.</p>
-                        <div class="code-block rounded-lg overflow-hidden">
-                            <div class="flex items-center justify-between px-4 py-2 bg-black/40 border-b border-white/5">
-                                <span class="text-xs text-slate-500 uppercase tracking-wider">Shell</span>
-                                <button onclick="copyCode(this)" class="text-xs text-slate-500 hover:text-white transition-colors">Copy</button>
+                        <p class="text-term-gray mb-4 text-sm font-mono"># Run an AI agent that executes commands in the sandbox.</p>
+                        <div class="border border-term-dim bg-black overflow-hidden">
+                            <div class="flex items-center justify-between px-4 py-2 bg-term-dim/50 border-b border-term-dim">
+                                <span class="text-xs text-term-gray uppercase tracking-wider">Shell</span>
+                                <button onclick="copyCode(this)" class="text-xs text-term-gray hover:text-white transition-colors">Copy</button>
                             </div>
                             <pre class="p-4 text-sm overflow-x-auto"><code><span class="comment"># Set API key</span>
 export ANTHROPIC_API_KEY=<span class="string">"your-api-key"</span>
@@ -373,44 +541,48 @@ bashlet agent <span class="string">"analyze the code and find potential bugs"</s
         </section>
 
         <!-- Command Reference -->
-        <section class="py-24 bg-[#111318]">
+        <section id="commands" class="py-24 bg-term-bg border-t border-term-dim">
             <div class="max-w-4xl mx-auto px-4">
                 <div class="text-center mb-16">
-                    <h2 class="font-display text-4xl lg:text-5xl font-bold mb-6">Command Reference</h2>
+                    <div class="inline-block border-b border-term-amber pb-1 mb-6">
+                        <h2 class="font-mono text-3xl font-bold uppercase text-white tracking-widest">
+                            <span class="text-term-amber">$</span> Command_Reference
+                        </h2>
+                    </div>
                 </div>
 
-                <div class="glass-panel rounded-xl overflow-hidden">
-                    <table class="w-full">
+                <div class="border border-term-dim bg-black overflow-hidden">
+                    <table class="w-full font-mono text-sm">
                         <thead>
-                            <tr class="border-b border-white/10">
-                                <th class="text-left p-4 font-semibold text-white bg-black/20">Command</th>
-                                <th class="text-left p-4 font-semibold text-white bg-black/20">Description</th>
+                            <tr class="border-b border-term-dim">
+                                <th class="text-left p-4 font-bold text-term-green bg-term-dim/30 uppercase tracking-wider">Command</th>
+                                <th class="text-left p-4 font-bold text-term-green bg-term-dim/30 uppercase tracking-wider">Description</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-white/5">
-                            <tr>
-                                <td class="p-4 font-mono text-sm text-primary whitespace-nowrap">bashlet exec "cmd"</td>
-                                <td class="p-4 text-slate-400">One-shot command execution in sandbox</td>
+                        <tbody class="divide-y divide-term-dim/50">
+                            <tr class="hover:bg-term-dim/20 transition-colors">
+                                <td class="p-4 text-term-blue whitespace-nowrap">bashlet exec "cmd"</td>
+                                <td class="p-4 text-term-gray">One-shot command execution in sandbox</td>
                             </tr>
-                            <tr>
-                                <td class="p-4 font-mono text-sm text-primary whitespace-nowrap">bashlet create</td>
-                                <td class="p-4 text-slate-400">Create a new persistent session</td>
+                            <tr class="hover:bg-term-dim/20 transition-colors">
+                                <td class="p-4 text-term-blue whitespace-nowrap">bashlet create</td>
+                                <td class="p-4 text-term-gray">Create a new persistent session</td>
                             </tr>
-                            <tr>
-                                <td class="p-4 font-mono text-sm text-primary whitespace-nowrap">bashlet run SESSION "cmd"</td>
-                                <td class="p-4 text-slate-400">Run command in an existing session</td>
+                            <tr class="hover:bg-term-dim/20 transition-colors">
+                                <td class="p-4 text-term-blue whitespace-nowrap">bashlet run SESSION "cmd"</td>
+                                <td class="p-4 text-term-gray">Run command in an existing session</td>
                             </tr>
-                            <tr>
-                                <td class="p-4 font-mono text-sm text-primary whitespace-nowrap">bashlet list</td>
-                                <td class="p-4 text-slate-400">List all active sessions</td>
+                            <tr class="hover:bg-term-dim/20 transition-colors">
+                                <td class="p-4 text-term-blue whitespace-nowrap">bashlet list</td>
+                                <td class="p-4 text-term-gray">List all active sessions</td>
                             </tr>
-                            <tr>
-                                <td class="p-4 font-mono text-sm text-primary whitespace-nowrap">bashlet terminate SESSION</td>
-                                <td class="p-4 text-slate-400">Terminate a session</td>
+                            <tr class="hover:bg-term-dim/20 transition-colors">
+                                <td class="p-4 text-term-blue whitespace-nowrap">bashlet terminate SESSION</td>
+                                <td class="p-4 text-term-gray">Terminate a session</td>
                             </tr>
-                            <tr>
-                                <td class="p-4 font-mono text-sm text-primary whitespace-nowrap">bashlet agent "task"</td>
-                                <td class="p-4 text-slate-400">Run AI agent with sandbox access</td>
+                            <tr class="hover:bg-term-dim/20 transition-colors">
+                                <td class="p-4 text-term-blue whitespace-nowrap">bashlet agent "task"</td>
+                                <td class="p-4 text-term-gray">Run AI agent with sandbox access</td>
                             </tr>
                         </tbody>
                     </table>
@@ -419,20 +591,25 @@ bashlet agent <span class="string">"analyze the code and find potential bugs"</s
         </section>
 
         <!-- CTA Section -->
-        <section class="py-24 relative overflow-hidden">
-            <div class="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent"></div>
-            <div class="max-w-4xl mx-auto px-4 text-center relative z-10">
-                <div class="inline-block p-4 rounded-full bg-primary/10 mb-6">
-                    <span class="material-symbols-outlined text-primary text-4xl">terminal</span>
+        <section class="py-24 bg-black border-t border-term-dim">
+            <div class="max-w-4xl mx-auto px-4 text-center">
+                <div class="inline-block mb-6 text-term-green animate-pulse">
+                    <span class="material-symbols-outlined text-6xl">terminal</span>
                 </div>
-                <h2 class="font-display text-4xl sm:text-5xl font-bold text-white mb-6">Ready to sandbox?</h2>
-                <p class="text-xl text-slate-400 mb-10 max-w-2xl mx-auto">
-                    Give your AI agents the tools they were trained on. Open source and free forever.
-                </p>
-                <div class="flex flex-col sm:flex-row gap-4 justify-center max-w-md mx-auto">
-                    <a href="https://github.com/ServiceWeave/bashlet" class="h-12 px-8 bg-white text-slate-900 font-bold rounded-lg hover:bg-slate-200 transition-colors flex items-center justify-center gap-2">
-                        <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24"><path clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" fill-rule="evenodd"></path></svg>
-                        View on GitHub
+                <h2 class="font-mono text-3xl sm:text-5xl font-bold text-white mb-6 uppercase tracking-tight">
+                    Ready to <span class="text-term-green">sandbox</span>?
+                </h2>
+                <div class="border-y border-term-dim py-6 mb-10 max-w-2xl mx-auto bg-term-dim/10">
+                    <p class="text-lg text-term-gray font-mono">
+                        Give your AI agents the tools they were trained on.<br/>
+                        Open source and free forever.
+                    </p>
+                </div>
+                <div class="flex flex-col sm:flex-row gap-6 justify-center max-w-md mx-auto">
+                    <a href="https://github.com/ServiceWeave/bashlet" class="bg-white text-black h-14 px-8 font-bold font-mono text-lg hover:bg-term-green transition-colors w-full border-2 border-transparent hover:border-white flex items-center justify-center gap-2 group">
+                        <span class="group-hover:hidden">&gt;</span>
+                        <span class="hidden group-hover:inline">$</span>
+                        ./get_started.sh
                     </a>
                 </div>
             </div>
@@ -440,29 +617,29 @@ bashlet agent <span class="string">"analyze the code and find potential bugs"</s
     </main>
 
     <!-- Footer -->
-    <footer class="border-t border-white/10 bg-[#0d1117] py-12">
+    <footer class="border-t border-term-dim bg-black py-12 font-mono text-sm">
         <div class="max-w-7xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-6">
             <div class="flex items-center gap-2">
-                <div class="flex items-center justify-center size-6 rounded bg-slate-800 text-slate-400">
-                    <span class="material-symbols-outlined text-sm">terminal</span>
-                </div>
-                <span class="font-display font-bold text-slate-400">Bashlet</span>
+                <span class="text-term-green font-bold">&gt;_</span>
+                <span class="font-bold text-white">Bashlet</span>
             </div>
-            <div class="text-slate-500 text-sm">
-                MIT License
+            <div class="text-term-gray text-xs">
+                root@bashlet: /license --mit
             </div>
             <div class="flex gap-6">
-                <a class="text-slate-500 hover:text-white transition-colors" href="https://github.com/ServiceWeave/bashlet">
-                    <span class="sr-only">GitHub</span>
-                    <svg aria-hidden="true" class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24"><path clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" fill-rule="evenodd"></path></svg>
+                <a class="text-term-gray hover:text-white transition-colors flex items-center gap-1" href="https://github.com/ServiceWeave/bashlet">
+                    <span>[ GitHub ]</span>
                 </a>
             </div>
         </div>
     </footer>
 
     <script>
+        // Update last login time
+        document.getElementById('current-date').textContent = new Date().toString().slice(0, 24);
+
         function copyCode(button) {
-            const pre = button.closest('.code-block').querySelector('pre');
+            const pre = button.closest('.border').querySelector('pre');
             const code = pre.textContent;
             navigator.clipboard.writeText(code).then(() => {
                 button.textContent = 'Copied!';
@@ -474,9 +651,9 @@ bashlet agent <span class="string">"analyze the code and find potential bugs"</s
 
         function copyInstall(button) {
             navigator.clipboard.writeText('curl -fsSL https://bashlet.dev/install.sh | sh').then(() => {
-                button.innerHTML = '<span class="material-symbols-outlined text-[18px] text-success">check</span>';
+                button.innerHTML = '<span class="material-symbols-outlined text-[16px] text-term-green">check</span>';
                 setTimeout(() => {
-                    button.innerHTML = '<span class="material-symbols-outlined text-[18px]">content_copy</span>';
+                    button.innerHTML = '<span class="material-symbols-outlined text-[16px]">content_copy</span>';
                 }, 2000);
             });
         }
