@@ -99,9 +99,9 @@ jobs:
 
       - name: Create checksums
         run: |
-          cd artifacts
-          find . -mindepth 2 -type f -exec mv {} . \;
-          rm -rf */
+          mkdir -p release-files
+          find artifacts -type f -exec cp {} release-files/ \;
+          cd release-files
           sha256sum * > checksums.txt
           cat checksums.txt
 
@@ -123,7 +123,7 @@ jobs:
           prerelease: false
           generate_release_notes: true
           files: |
-            artifacts/*
+            release-files/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
