@@ -100,11 +100,8 @@ jobs:
       - name: Create checksums
         run: |
           cd artifacts
-          for dir in */; do
-            file=$(ls "$dir")
-            mv "$dir/$file" .
-          done
-          rmdir */
+          find . -mindepth 2 -type f -exec mv {} . \;
+          rm -rf */
           sha256sum * > checksums.txt
           cat checksums.txt
 
