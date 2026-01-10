@@ -1,340 +1,411 @@
 <!DOCTYPE html>
-<html lang="en">
+<html class="dark" lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bashlet - Sandboxed Bash Execution</title>
-    <meta name="description" content="Run shell commands in a secure WebAssembly sandbox. Bashlet provides isolated bash execution with directory mounting and session management.">
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Bashlet - Sandboxed Bash for AI Agents</title>
+    <meta name="description" content="Give your AI agents a secure sandbox to execute shell commands. WebAssembly-powered isolation with directory mounting and session management.">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐚</text></svg>">
+    <link href="https://fonts.googleapis.com" rel="preconnect"/>
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Noto+Sans:wght@400;500;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#135bec",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#101622",
+                        "card-dark": "#1a1f2b",
+                        "card-border": "rgba(255, 255, 255, 0.1)",
+                        "success": "#22c55e",
+                    },
+                    fontFamily: {
+                        "display": ["Space Grotesk", "sans-serif"],
+                        "sans": ["Noto Sans", "sans-serif"],
+                        "mono": ["Fira Code", "monospace"],
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "2xl": "1rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
     <style>
-        :root {
-            --bg: #0d1117;
-            --bg-secondary: #161b22;
-            --border: #30363d;
-            --text: #e6edf3;
-            --text-muted: #8b949e;
-            --accent: #58a6ff;
-            --accent-hover: #79b8ff;
-            --green: #3fb950;
-            --code-bg: #0d1117;
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
         }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        .glass-panel {
+            background: rgba(26, 31, 43, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
         }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            line-height: 1.6;
-            min-height: 100vh;
-        }
-
-        .container {
-            max-width: 900px;
-            margin: 0 auto;
-            padding: 0 24px;
-        }
-
-        header {
-            padding: 80px 0 60px;
-            text-align: center;
-        }
-
-        h1 {
-            font-size: 3.5rem;
-            font-weight: 700;
-            margin-bottom: 16px;
-            letter-spacing: -0.02em;
-        }
-
-        .tagline {
-            font-size: 1.25rem;
-            color: var(--text-muted);
-            max-width: 600px;
-            margin: 0 auto 32px;
-        }
-
-        .badges {
-            display: flex;
-            gap: 12px;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-
-        .badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 6px 12px;
-            background: var(--bg-secondary);
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            font-size: 0.875rem;
-            color: var(--text-muted);
-        }
-
-        .badge svg {
-            width: 16px;
-            height: 16px;
-        }
-
-        section {
-            margin-bottom: 64px;
-        }
-
-        h2 {
-            font-size: 1.5rem;
-            font-weight: 600;
-            margin-bottom: 24px;
-            padding-bottom: 12px;
-            border-bottom: 1px solid var(--border);
-        }
-
         .code-block {
-            background: var(--bg-secondary);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            overflow: hidden;
-            margin-bottom: 16px;
+            background: #0d1117;
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
-
-        .code-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 8px 16px;
-            background: rgba(0, 0, 0, 0.2);
-            border-bottom: 1px solid var(--border);
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-
-        .copy-btn {
-            background: none;
-            border: none;
-            color: var(--text-muted);
-            cursor: pointer;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 0.75rem;
-            transition: all 0.2s;
-        }
-
-        .copy-btn:hover {
-            background: var(--border);
-            color: var(--text);
-        }
-
-        pre {
-            padding: 16px;
-            overflow-x: auto;
-            font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
-            font-size: 0.875rem;
-            line-height: 1.5;
-        }
-
-        code {
-            font-family: inherit;
-        }
-
-        .comment {
-            color: var(--text-muted);
-        }
-
-        .command {
-            color: var(--green);
-        }
-
-        .string {
-            color: #a5d6ff;
-        }
-
-        .flag {
-            color: #ff7b72;
-        }
-
-        p {
-            color: var(--text-muted);
-            margin-bottom: 16px;
-        }
-
-        .subsection {
-            margin-bottom: 32px;
-        }
-
-        .subsection h3 {
-            font-size: 1.125rem;
-            font-weight: 600;
-            margin-bottom: 12px;
-            color: var(--text);
-        }
-
-        .command-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 16px;
-        }
-
-        .command-table th,
-        .command-table td {
-            text-align: left;
-            padding: 12px 16px;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .command-table th {
-            font-weight: 600;
-            color: var(--text);
-            background: var(--bg-secondary);
-        }
-
-        .command-table td:first-child {
-            font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
-            font-size: 0.875rem;
-            color: var(--accent);
-            white-space: nowrap;
-        }
-
-        .command-table td:last-child {
-            color: var(--text-muted);
-        }
-
-        footer {
-            text-align: center;
-            padding: 48px 0;
-            border-top: 1px solid var(--border);
-            color: var(--text-muted);
-            font-size: 0.875rem;
-        }
-
-        footer a {
-            color: var(--accent);
-            text-decoration: none;
-        }
-
-        footer a:hover {
-            text-decoration: underline;
-        }
-
-        .github-link {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            color: var(--accent);
-            text-decoration: none;
-            font-weight: 500;
-            transition: color 0.2s;
-        }
-
-        .github-link:hover {
-            color: var(--accent-hover);
-        }
-
-        .github-link svg {
-            width: 20px;
-            height: 20px;
-        }
-
-        @media (max-width: 640px) {
-            header {
-                padding: 48px 0 40px;
-            }
-
-            h1 {
-                font-size: 2.5rem;
-            }
-
-            .tagline {
-                font-size: 1.125rem;
-            }
-
-            pre {
-                font-size: 0.8rem;
-            }
-
-            .command-table td:first-child {
-                font-size: 0.8rem;
-            }
-        }
+        .comment { color: #8b949e; }
+        .command { color: #22c55e; }
+        .string { color: #a5d6ff; }
+        .flag { color: #ff7b72; }
     </style>
 </head>
-<body>
-    <div class="container">
-        <header>
-            <h1>Bashlet</h1>
-            <p class="tagline">Sandboxed bash execution using WebAssembly. Run shell commands in secure isolation with directory mounting and session management.</p>
-            <div class="badges">
-                <span class="badge">
-                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
-                    WASM Sandbox
-                </span>
-                <span class="badge">
-                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
-                    Secure Isolation
-                </span>
-                <span class="badge">
-                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 6h-8l-2-2H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 12H4V8h16v10z"/></svg>
-                    Directory Mounting
-                </span>
-            </div>
-        </header>
+<body class="bg-background-light dark:bg-background-dark min-h-screen flex flex-col font-sans selection:bg-primary/30 text-slate-900 dark:text-white overflow-x-hidden">
 
-        <section>
-            <h2>Installation</h2>
-
-            <div class="subsection">
-                <h3>1. Install Wasmer</h3>
-                <p>Bashlet requires the Wasmer runtime for WebAssembly execution.</p>
-                <div class="code-block">
-                    <div class="code-header">
-                        <span>Shell</span>
-                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+    <!-- Header -->
+    <header class="sticky top-0 z-50 w-full border-b border-gray-200 dark:border-white/10 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="relative flex h-16 items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <div class="flex items-center justify-center size-8 rounded-lg bg-primary text-white">
+                        <span class="material-symbols-outlined text-xl">terminal</span>
                     </div>
-                    <pre><code>curl https://get.wasmer.io -sSfL | sh</code></pre>
+                    <span class="font-display text-xl font-bold tracking-tight">Bashlet</span>
+                </div>
+                <nav class="hidden md:flex items-center gap-8">
+                    <a href="#why" class="text-sm text-slate-400 hover:text-white transition-colors">Why Bashlet</a>
+                    <a href="#features" class="text-sm text-slate-400 hover:text-white transition-colors">Features</a>
+                    <a href="#installation" class="text-sm text-slate-400 hover:text-white transition-colors">Installation</a>
+                    <a href="#usage" class="text-sm text-slate-400 hover:text-white transition-colors">Usage</a>
+                </nav>
+                <div class="flex items-center gap-4">
+                    <a class="bg-primary hover:bg-blue-600 text-white text-sm font-bold px-4 py-2 rounded-lg transition-all shadow-[0_0_15px_-3px_rgba(19,91,236,0.4)] flex items-center gap-2" href="https://github.com/ServiceWeave/bashlet">
+                        <svg aria-hidden="true" class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24"><path clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" fill-rule="evenodd"></path></svg>
+                        GitHub
+                    </a>
                 </div>
             </div>
+        </div>
+    </header>
 
-            <div class="subsection">
-                <h3>2. Install Bashlet</h3>
-                <div class="code-block">
-                    <div class="code-header">
-                        <span>Quick Install (macOS/Linux)</span>
-                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
-                    </div>
-                    <pre><code>curl -fsSL https://bashlet.dev/install.sh | sh</code></pre>
-                </div>
+    <main class="flex-grow">
+        <!-- Hero Section -->
+        <section class="relative pt-20 pb-32 overflow-hidden">
+            <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[500px] bg-primary/20 blur-[120px] rounded-full pointer-events-none opacity-40"></div>
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+                <div class="grid lg:grid-cols-2 gap-12 lg:gap-8 items-center">
+                    <div class="flex flex-col gap-6 max-w-2xl mx-auto lg:mx-0 text-center lg:text-left">
+                        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 w-fit mx-auto lg:mx-0">
+                            <span class="relative flex h-2 w-2">
+                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                                <span class="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+                            </span>
+                            <span class="text-xs font-bold text-primary tracking-wide uppercase">Open Source</span>
+                        </div>
 
-                <p style="margin-top: 24px;">Or build from source:</p>
-                <div class="code-block">
-                    <div class="code-header">
-                        <span>From Source</span>
-                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                        <h1 class="font-display text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.1]">
+                            Sandboxed <span class="text-transparent bg-clip-text bg-gradient-to-r from-primary to-blue-300">Bash</span> for AI Agents
+                        </h1>
+
+                        <p class="text-lg text-slate-600 dark:text-slate-400 leading-relaxed max-w-lg mx-auto lg:mx-0">
+                            Give your AI agents a secure sandbox to execute shell commands. WebAssembly-powered isolation with directory mounting and session management.
+                        </p>
+
+                        <div class="flex flex-wrap items-center justify-center lg:justify-start gap-4 mt-4">
+                            <a href="#installation" class="bg-primary hover:bg-blue-600 text-white h-12 px-8 rounded-lg font-bold text-base transition-all shadow-lg shadow-primary/25 flex items-center gap-2">
+                                <span class="material-symbols-outlined text-[20px]">terminal</span>
+                                Get Started
+                            </a>
+                            <a href="#usage" class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-900 dark:text-white h-12 px-8 rounded-lg font-bold text-base transition-all flex items-center gap-2">
+                                <span class="material-symbols-outlined text-[20px]">description</span>
+                                Documentation
+                            </a>
+                        </div>
+
+                        <div class="mt-6 w-full max-w-[480px] mx-auto lg:mx-0">
+                            <div class="flex items-center justify-between gap-3 px-4 py-3 bg-[#0d1117] border border-slate-800 rounded-lg font-mono text-sm shadow-sm group hover:border-primary/30 transition-colors">
+                                <div class="flex items-center gap-3 overflow-hidden">
+                                    <span class="text-success shrink-0 select-none">$</span>
+                                    <span class="text-slate-300 truncate">curl -fsSL https://bashlet.dev/install.sh | sh</span>
+                                </div>
+                                <button onclick="copyInstall(this)" class="shrink-0 text-slate-500 hover:text-white transition-colors" title="Copy to clipboard">
+                                    <span class="material-symbols-outlined text-[18px]">content_copy</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="pt-6 flex items-center justify-center lg:justify-start gap-4 text-sm text-slate-500 dark:text-slate-500 font-mono">
+                            <div class="flex items-center gap-1">
+                                <span class="material-symbols-outlined text-green-500 text-[18px]">check_circle</span>
+                                <span>WASM Sandbox</span>
+                            </div>
+                            <div class="flex items-center gap-1">
+                                <span class="material-symbols-outlined text-green-500 text-[18px]">check_circle</span>
+                                <span>MIT License</span>
+                            </div>
+                        </div>
                     </div>
-                    <pre><code>git clone https://github.com/ServiceWeave/bashlet.git
-cd bashlet
-cargo build --release</code></pre>
+
+                    <!-- Terminal Demo -->
+                    <div class="relative w-full max-w-lg mx-auto lg:max-w-none">
+                        <div class="absolute inset-0 bg-gradient-to-tr from-primary/30 to-purple-500/20 rounded-2xl blur-xl transform rotate-3 scale-95"></div>
+                        <div class="relative rounded-xl overflow-hidden bg-[#0d1117] border border-slate-800 shadow-2xl">
+                            <div class="flex items-center justify-between px-4 py-3 bg-[#161b22] border-b border-slate-800">
+                                <div class="flex items-center gap-2">
+                                    <div class="size-3 rounded-full bg-red-500/80"></div>
+                                    <div class="size-3 rounded-full bg-yellow-500/80"></div>
+                                    <div class="size-3 rounded-full bg-green-500/80"></div>
+                                </div>
+                                <div class="flex items-center gap-1.5 opacity-60">
+                                    <span class="material-symbols-outlined text-[14px] text-slate-400">lock</span>
+                                    <span class="text-xs font-mono text-slate-400">bashlet-sandbox</span>
+                                </div>
+                                <div class="size-3"></div>
+                            </div>
+                            <div class="p-6 font-mono text-sm leading-relaxed min-h-[320px] text-slate-300">
+                                <div class="flex gap-2">
+                                    <span class="text-success">$</span>
+                                    <span>bashlet create --name demo --mount ./src:/workspace</span>
+                                </div>
+                                <div class="pl-4 mt-2 mb-4 text-slate-500">
+                                    <span class="text-success">Session 'demo' created</span>
+                                </div>
+                                <div class="flex gap-2">
+                                    <span class="text-success">$</span>
+                                    <span>bashlet run demo "ls /workspace"</span>
+                                </div>
+                                <div class="pl-4 mt-2 mb-4">
+                                    <span class="text-white">main.rs  lib.rs  tests/</span>
+                                </div>
+                                <div class="flex gap-2">
+                                    <span class="text-success">$</span>
+                                    <span>bashlet run demo "cat /workspace/main.rs | head -5"</span>
+                                </div>
+                                <div class="pl-4 mt-2 mb-4 text-slate-400">
+                                    <span>fn main() {</span><br/>
+                                    <span>    println!("Hello, world!");</span><br/>
+                                    <span>}</span>
+                                </div>
+                                <div class="flex gap-2">
+                                    <span class="text-success">$</span>
+                                    <span>bashlet terminate demo</span>
+                                </div>
+                                <div class="pl-4 mt-2 mb-4 text-slate-500">
+                                    <span class="text-success">Session terminated</span>
+                                </div>
+                                <div class="flex gap-2 animate-pulse">
+                                    <span class="text-success">$</span>
+                                    <span class="w-2.5 h-5 bg-slate-400 block"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>
 
-        <section>
-            <h2>Usage</h2>
-
-            <div class="subsection">
-                <h3>One-Shot Execution</h3>
-                <p>Run a single command in an isolated sandbox.</p>
-                <div class="code-block">
-                    <div class="code-header">
-                        <span>Shell</span>
-                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+        <!-- Why Bashlet Section -->
+        <section id="why" class="py-24 relative overflow-hidden bg-background-dark/30">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-16">
+                    <h2 class="font-display text-4xl lg:text-5xl font-bold mb-6">Why Your Agents Need a Shell</h2>
+                    <p class="text-lg text-slate-600 dark:text-slate-300 max-w-3xl mx-auto leading-relaxed">
+                        LLMs excel at reasoning, but they need the right tools to act. Give your agents the same capabilities as a human developer with filesystem access and real shell execution.
+                    </p>
+                    <div class="mt-8 inline-block px-6 py-2 rounded-full border border-primary/30 bg-primary/10 backdrop-blur-sm">
+                        <p class="font-mono text-sm text-primary font-semibold">"LLMs have seen grep, cat, find, and awk billions of times during training."</p>
                     </div>
-                    <pre><code><span class="comment"># Basic command</span>
+                </div>
+
+                <div class="grid md:grid-cols-3 gap-8">
+                    <div class="glass-panel p-8 rounded-xl border border-white/5 hover:border-primary/50 transition-all duration-300 group">
+                        <div class="size-12 rounded-lg bg-blue-500/10 text-blue-400 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                            <span class="material-symbols-outlined text-3xl">folder_open</span>
+                        </div>
+                        <h3 class="text-xl font-bold mb-3 text-white">Context via Filesystem</h3>
+                        <p class="text-slate-400 text-sm leading-relaxed">
+                            Instead of prompt stuffing or vector search, let agents read local project files, traverse directories, and analyze structure to understand codebases deeply.
+                        </p>
+                    </div>
+
+                    <div class="glass-panel p-8 rounded-xl border border-white/5 hover:border-primary/50 transition-all duration-300 group">
+                        <div class="size-12 rounded-lg bg-green-500/10 text-green-400 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                            <span class="material-symbols-outlined text-3xl">check_circle</span>
+                        </div>
+                        <h3 class="text-xl font-bold mb-3 text-white">Validation via Execution</h3>
+                        <p class="text-slate-400 text-sm leading-relaxed">
+                            Don't just trust the output. Let agents run tests, linters, or compile code to verify correctness before proposing changes to the user.
+                        </p>
+                    </div>
+
+                    <div class="glass-panel p-8 rounded-xl border border-white/5 hover:border-primary/50 transition-all duration-300 group">
+                        <div class="size-12 rounded-lg bg-purple-500/10 text-purple-400 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                            <span class="material-symbols-outlined text-3xl">construction</span>
+                        </div>
+                        <h3 class="text-xl font-bold mb-3 text-white">Native LLM Capabilities</h3>
+                        <p class="text-slate-400 text-sm leading-relaxed">
+                            Tools like <code class="bg-white/10 px-1 py-0.5 rounded text-xs">grep</code>, <code class="bg-white/10 px-1 py-0.5 rounded text-xs">cat</code>, and <code class="bg-white/10 px-1 py-0.5 rounded text-xs">find</code> are native operations that models understand deeply from pretraining.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Features Section -->
+        <section id="features" class="py-24 relative">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex flex-col items-center text-center mb-16 gap-4">
+                    <h2 class="font-display text-4xl lg:text-5xl font-bold">Engineered for Security</h2>
+                    <p class="text-lg text-slate-600 dark:text-slate-400 max-w-2xl">
+                        A robust runtime environment designed for the unpredictability of LLM-generated commands.
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 auto-rows-[minmax(280px,auto)]">
+                    <div class="md:col-span-2 glass-panel rounded-2xl p-8 relative overflow-hidden group hover:border-primary/40 transition-colors">
+                        <div class="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
+                            <span class="material-symbols-outlined text-[120px]">security</span>
+                        </div>
+                        <div class="relative z-10 h-full flex flex-col justify-between">
+                            <div class="size-12 rounded-lg bg-primary/20 flex items-center justify-center text-primary mb-6">
+                                <span class="material-symbols-outlined text-3xl">shield_lock</span>
+                            </div>
+                            <div>
+                                <h3 class="font-display text-2xl font-bold mb-3">WebAssembly Isolation</h3>
+                                <p class="text-slate-400 text-base leading-relaxed max-w-md">
+                                    Every session runs in a <span class="text-white font-medium">Wasmer-powered sandbox</span> providing complete isolation from your host system.
+                                    Agents reason about actions while the sandbox handles execution safely.
+                                </p>
+                            </div>
+                            <div class="mt-8 font-mono text-xs text-slate-500 bg-black/40 p-4 rounded-lg border border-white/5 w-fit">
+                                isolation: <span class="text-success">"wasm-sandbox"</span><br/>
+                                host_access: <span class="text-primary">"mounted-dirs-only"</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="glass-panel rounded-2xl p-8 relative overflow-hidden group hover:border-primary/40 transition-colors">
+                        <div class="absolute inset-0 bg-gradient-to-b from-transparent to-primary/5"></div>
+                        <div class="relative z-10">
+                            <div class="size-12 rounded-lg bg-yellow-500/20 flex items-center justify-center text-yellow-500 mb-6">
+                                <span class="material-symbols-outlined text-3xl">folder_shared</span>
+                            </div>
+                            <h3 class="font-display text-2xl font-bold mb-3">Directory Mounting</h3>
+                            <p class="text-slate-400 text-sm">
+                                Expose only the directories your agent needs. Mount project folders at specific paths while keeping everything else inaccessible.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="glass-panel rounded-2xl p-8 relative overflow-hidden group hover:border-primary/40 transition-colors">
+                        <div class="relative z-10">
+                            <div class="size-12 rounded-lg bg-purple-500/20 flex items-center justify-center text-purple-500 mb-6">
+                                <span class="material-symbols-outlined text-3xl">history</span>
+                            </div>
+                            <h3 class="font-display text-2xl font-bold mb-3">Session Management</h3>
+                            <p class="text-slate-400 text-sm">
+                                Create persistent sessions that maintain configuration across multiple commands. Perfect for multi-step agent workflows.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="md:col-span-2 glass-panel rounded-2xl p-8 relative overflow-hidden group hover:border-primary/40 transition-colors">
+                        <div class="relative z-10 flex flex-col md:flex-row gap-8 h-full">
+                            <div class="flex-1 flex flex-col justify-between">
+                                <div>
+                                    <div class="size-12 rounded-lg bg-green-500/20 flex items-center justify-center text-green-500 mb-6">
+                                        <span class="material-symbols-outlined text-3xl">visibility</span>
+                                    </div>
+                                    <h3 class="font-display text-2xl font-bold mb-3">Full Debuggability</h3>
+                                    <p class="text-slate-400 text-base leading-relaxed">
+                                        The entire execution path remains visible. See exactly what commands your agent ran, what files it read, and what output it produced. No black boxes.
+                                    </p>
+                                </div>
+                                <div class="mt-6 flex gap-3">
+                                    <span class="px-2 py-1 bg-white/5 border border-white/10 rounded text-xs text-slate-300 font-mono">stdout: captured</span>
+                                    <span class="px-2 py-1 bg-white/5 border border-white/10 rounded text-xs text-slate-300 font-mono">stderr: captured</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Installation Section -->
+        <section id="installation" class="py-24 bg-[#111318]">
+            <div class="max-w-4xl mx-auto px-4">
+                <div class="text-center mb-16">
+                    <h2 class="font-display text-4xl lg:text-5xl font-bold mb-6">Installation</h2>
+                    <p class="text-lg text-slate-400 max-w-2xl mx-auto">
+                        Get up and running in under a minute.
+                    </p>
+                </div>
+
+                <div class="space-y-8">
+                    <!-- Step 1 -->
+                    <div class="glass-panel rounded-xl p-6">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="size-8 rounded-full bg-primary/20 text-primary flex items-center justify-center font-bold text-sm">1</div>
+                            <h3 class="font-display text-xl font-bold">Install Wasmer Runtime</h3>
+                        </div>
+                        <p class="text-slate-400 text-sm mb-4">Bashlet requires the Wasmer runtime for WebAssembly execution.</p>
+                        <div class="code-block rounded-lg overflow-hidden">
+                            <div class="flex items-center justify-between px-4 py-2 bg-black/40 border-b border-white/5">
+                                <span class="text-xs text-slate-500 uppercase tracking-wider">Shell</span>
+                                <button onclick="copyCode(this)" class="text-xs text-slate-500 hover:text-white transition-colors">Copy</button>
+                            </div>
+                            <pre class="p-4 text-sm overflow-x-auto"><code>curl https://get.wasmer.io -sSfL | sh</code></pre>
+                        </div>
+                    </div>
+
+                    <!-- Step 2 -->
+                    <div class="glass-panel rounded-xl p-6">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="size-8 rounded-full bg-primary/20 text-primary flex items-center justify-center font-bold text-sm">2</div>
+                            <h3 class="font-display text-xl font-bold">Install Bashlet</h3>
+                        </div>
+                        <div class="code-block rounded-lg overflow-hidden mb-4">
+                            <div class="flex items-center justify-between px-4 py-2 bg-black/40 border-b border-white/5">
+                                <span class="text-xs text-slate-500 uppercase tracking-wider">Quick Install (macOS/Linux)</span>
+                                <button onclick="copyCode(this)" class="text-xs text-slate-500 hover:text-white transition-colors">Copy</button>
+                            </div>
+                            <pre class="p-4 text-sm overflow-x-auto"><code>curl -fsSL https://bashlet.dev/install.sh | sh</code></pre>
+                        </div>
+
+                        <p class="text-slate-500 text-sm mb-4">Or build from source:</p>
+                        <div class="code-block rounded-lg overflow-hidden">
+                            <div class="flex items-center justify-between px-4 py-2 bg-black/40 border-b border-white/5">
+                                <span class="text-xs text-slate-500 uppercase tracking-wider">From Source</span>
+                                <button onclick="copyCode(this)" class="text-xs text-slate-500 hover:text-white transition-colors">Copy</button>
+                            </div>
+                            <pre class="p-4 text-sm overflow-x-auto"><code>git clone https://github.com/ServiceWeave/bashlet.git
+cd bashlet
+cargo build --release</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Usage Section -->
+        <section id="usage" class="py-24 relative">
+            <div class="max-w-4xl mx-auto px-4">
+                <div class="text-center mb-16">
+                    <h2 class="font-display text-4xl lg:text-5xl font-bold mb-6">Usage</h2>
+                    <p class="text-lg text-slate-400 max-w-2xl mx-auto">
+                        Simple CLI for one-shot commands, persistent sessions, and AI agent integration.
+                    </p>
+                </div>
+
+                <div class="space-y-12">
+                    <!-- One-Shot Execution -->
+                    <div>
+                        <h3 class="font-display text-2xl font-bold mb-4 flex items-center gap-3">
+                            <span class="material-symbols-outlined text-primary">bolt</span>
+                            One-Shot Execution
+                        </h3>
+                        <p class="text-slate-400 mb-4">Run a single command in an isolated sandbox.</p>
+                        <div class="code-block rounded-lg overflow-hidden">
+                            <div class="flex items-center justify-between px-4 py-2 bg-black/40 border-b border-white/5">
+                                <span class="text-xs text-slate-500 uppercase tracking-wider">Shell</span>
+                                <button onclick="copyCode(this)" class="text-xs text-slate-500 hover:text-white transition-colors">Copy</button>
+                            </div>
+                            <pre class="p-4 text-sm overflow-x-auto"><code><span class="comment"># Basic command</span>
 bashlet exec <span class="string">"echo hello world"</span>
 
 <span class="comment"># With mounted directory</span>
@@ -342,18 +413,22 @@ bashlet exec <span class="flag">--mount</span> ./src:/workspace <span class="str
 
 <span class="comment"># With environment variables</span>
 bashlet exec <span class="flag">--env</span> MESSAGE=<span class="string">"Hello"</span> <span class="string">"echo \$MESSAGE"</span></code></pre>
-                </div>
-            </div>
-
-            <div class="subsection">
-                <h3>Session Management</h3>
-                <p>Create persistent sandbox sessions that maintain configuration across commands.</p>
-                <div class="code-block">
-                    <div class="code-header">
-                        <span>Shell</span>
-                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                        </div>
                     </div>
-                    <pre><code><span class="comment"># Create a session</span>
+
+                    <!-- Session Management -->
+                    <div>
+                        <h3 class="font-display text-2xl font-bold mb-4 flex items-center gap-3">
+                            <span class="material-symbols-outlined text-primary">history</span>
+                            Session Management
+                        </h3>
+                        <p class="text-slate-400 mb-4">Create persistent sandbox sessions that maintain configuration across commands.</p>
+                        <div class="code-block rounded-lg overflow-hidden">
+                            <div class="flex items-center justify-between px-4 py-2 bg-black/40 border-b border-white/5">
+                                <span class="text-xs text-slate-500 uppercase tracking-wider">Shell</span>
+                                <button onclick="copyCode(this)" class="text-xs text-slate-500 hover:text-white transition-colors">Copy</button>
+                            </div>
+                            <pre class="p-4 text-sm overflow-x-auto"><code><span class="comment"># Create a session</span>
 bashlet create <span class="flag">--name</span> my-session <span class="flag">--mount</span> ./src:/workspace
 
 <span class="comment"># Run commands in the session</span>
@@ -365,74 +440,119 @@ bashlet list
 
 <span class="comment"># Terminate when done</span>
 bashlet terminate my-session</code></pre>
-                </div>
-            </div>
-
-            <div class="subsection">
-                <h3>AI Agent Mode</h3>
-                <p>Run an AI agent that executes commands in the sandbox.</p>
-                <div class="code-block">
-                    <div class="code-header">
-                        <span>Shell</span>
-                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                        </div>
                     </div>
-                    <pre><code><span class="comment"># Set API key</span>
+
+                    <!-- AI Agent Mode -->
+                    <div>
+                        <h3 class="font-display text-2xl font-bold mb-4 flex items-center gap-3">
+                            <span class="material-symbols-outlined text-primary">smart_toy</span>
+                            AI Agent Mode
+                        </h3>
+                        <p class="text-slate-400 mb-4">Run an AI agent that executes commands in the sandbox.</p>
+                        <div class="code-block rounded-lg overflow-hidden">
+                            <div class="flex items-center justify-between px-4 py-2 bg-black/40 border-b border-white/5">
+                                <span class="text-xs text-slate-500 uppercase tracking-wider">Shell</span>
+                                <button onclick="copyCode(this)" class="text-xs text-slate-500 hover:text-white transition-colors">Copy</button>
+                            </div>
+                            <pre class="p-4 text-sm overflow-x-auto"><code><span class="comment"># Set API key</span>
 export ANTHROPIC_API_KEY=<span class="string">"your-api-key"</span>
 
 <span class="comment"># Run agent with a task</span>
 bashlet agent <span class="string">"analyze the code and find potential bugs"</span> <span class="flag">--mount</span> ./src:/workspace</code></pre>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>
 
-        <section>
-            <h2>Command Reference</h2>
-            <table class="command-table">
-                <thead>
-                    <tr>
-                        <th>Command</th>
-                        <th>Description</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>bashlet exec "cmd"</td>
-                        <td>One-shot command execution in sandbox</td>
-                    </tr>
-                    <tr>
-                        <td>bashlet create</td>
-                        <td>Create a new persistent session</td>
-                    </tr>
-                    <tr>
-                        <td>bashlet run SESSION "cmd"</td>
-                        <td>Run command in an existing session</td>
-                    </tr>
-                    <tr>
-                        <td>bashlet list</td>
-                        <td>List all active sessions</td>
-                    </tr>
-                    <tr>
-                        <td>bashlet terminate SESSION</td>
-                        <td>Terminate a session</td>
-                    </tr>
-                    <tr>
-                        <td>bashlet agent "task"</td>
-                        <td>Run AI agent with sandbox access</td>
-                    </tr>
-                </tbody>
-            </table>
+        <!-- Command Reference -->
+        <section class="py-24 bg-[#111318]">
+            <div class="max-w-4xl mx-auto px-4">
+                <div class="text-center mb-16">
+                    <h2 class="font-display text-4xl lg:text-5xl font-bold mb-6">Command Reference</h2>
+                </div>
+
+                <div class="glass-panel rounded-xl overflow-hidden">
+                    <table class="w-full">
+                        <thead>
+                            <tr class="border-b border-white/10">
+                                <th class="text-left p-4 font-semibold text-white bg-black/20">Command</th>
+                                <th class="text-left p-4 font-semibold text-white bg-black/20">Description</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-white/5">
+                            <tr>
+                                <td class="p-4 font-mono text-sm text-primary whitespace-nowrap">bashlet exec "cmd"</td>
+                                <td class="p-4 text-slate-400">One-shot command execution in sandbox</td>
+                            </tr>
+                            <tr>
+                                <td class="p-4 font-mono text-sm text-primary whitespace-nowrap">bashlet create</td>
+                                <td class="p-4 text-slate-400">Create a new persistent session</td>
+                            </tr>
+                            <tr>
+                                <td class="p-4 font-mono text-sm text-primary whitespace-nowrap">bashlet run SESSION "cmd"</td>
+                                <td class="p-4 text-slate-400">Run command in an existing session</td>
+                            </tr>
+                            <tr>
+                                <td class="p-4 font-mono text-sm text-primary whitespace-nowrap">bashlet list</td>
+                                <td class="p-4 text-slate-400">List all active sessions</td>
+                            </tr>
+                            <tr>
+                                <td class="p-4 font-mono text-sm text-primary whitespace-nowrap">bashlet terminate SESSION</td>
+                                <td class="p-4 text-slate-400">Terminate a session</td>
+                            </tr>
+                            <tr>
+                                <td class="p-4 font-mono text-sm text-primary whitespace-nowrap">bashlet agent "task"</td>
+                                <td class="p-4 text-slate-400">Run AI agent with sandbox access</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </section>
 
-        <footer>
-            <p style="margin-bottom: 16px;">
-                <a href="https://github.com/ServiceWeave/bashlet" class="github-link">
-                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
-                    View on GitHub
+        <!-- CTA Section -->
+        <section class="py-24 relative overflow-hidden">
+            <div class="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent"></div>
+            <div class="max-w-4xl mx-auto px-4 text-center relative z-10">
+                <div class="inline-block p-4 rounded-full bg-primary/10 mb-6">
+                    <span class="material-symbols-outlined text-primary text-4xl">terminal</span>
+                </div>
+                <h2 class="font-display text-4xl sm:text-5xl font-bold text-white mb-6">Ready to sandbox?</h2>
+                <p class="text-xl text-slate-400 mb-10 max-w-2xl mx-auto">
+                    Give your AI agents the tools they were trained on. Open source and free forever.
+                </p>
+                <div class="flex flex-col sm:flex-row gap-4 justify-center max-w-md mx-auto">
+                    <a href="https://github.com/ServiceWeave/bashlet" class="h-12 px-8 bg-white text-slate-900 font-bold rounded-lg hover:bg-slate-200 transition-colors flex items-center justify-center gap-2">
+                        <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24"><path clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" fill-rule="evenodd"></path></svg>
+                        View on GitHub
+                    </a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-white/10 bg-[#0d1117] py-12">
+        <div class="max-w-7xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-6">
+            <div class="flex items-center gap-2">
+                <div class="flex items-center justify-center size-6 rounded bg-slate-800 text-slate-400">
+                    <span class="material-symbols-outlined text-sm">terminal</span>
+                </div>
+                <span class="font-display font-bold text-slate-400">Bashlet</span>
+            </div>
+            <div class="text-slate-500 text-sm">
+                MIT License
+            </div>
+            <div class="flex gap-6">
+                <a class="text-slate-500 hover:text-white transition-colors" href="https://github.com/ServiceWeave/bashlet">
+                    <span class="sr-only">GitHub</span>
+                    <svg aria-hidden="true" class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24"><path clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" fill-rule="evenodd"></path></svg>
                 </a>
-            </p>
-            <p>MIT License</p>
-        </footer>
-    </div>
+            </div>
+        </div>
+    </footer>
 
     <script>
         function copyCode(button) {
@@ -442,6 +562,15 @@ bashlet agent <span class="string">"analyze the code and find potential bugs"</s
                 button.textContent = 'Copied!';
                 setTimeout(() => {
                     button.textContent = 'Copy';
+                }, 2000);
+            });
+        }
+
+        function copyInstall(button) {
+            navigator.clipboard.writeText('curl -fsSL https://bashlet.dev/install.sh | sh').then(() => {
+                button.innerHTML = '<span class="material-symbols-outlined text-[18px] text-success">check</span>';
+                setTimeout(() => {
+                    button.innerHTML = '<span class="material-symbols-outlined text-[18px]">content_copy</span>';
                 }, 2000);
             });
         }
