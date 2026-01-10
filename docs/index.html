@@ -129,35 +129,17 @@
 </head>
 <body class="min-h-screen flex flex-col overflow-x-hidden crt">
 
-    <!-- Header -->
-    <header class="sticky top-0 z-50 w-full bg-term-bg border-b border-term-dim">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="relative flex h-12 items-center justify-between font-mono text-sm">
-                <div class="flex items-center gap-4">
-                    <span class="text-term-gray select-none">root@bashlet:~#</span>
-                    <span class="font-bold text-white tracking-tight">./Bashlet</span>
-                </div>
-                <div class="flex items-center gap-6 text-term-gray">
-                    <nav class="hidden md:flex gap-6">
-                        <a class="hover:text-term-green hover:underline decoration-2 underline-offset-4" href="#usage">[ --usage ]</a>
-                        <a class="hover:text-term-green hover:underline decoration-2 underline-offset-4" href="#features">[ --features ]</a>
-                        <a class="hover:text-term-green hover:underline decoration-2 underline-offset-4" href="#commands">[ --commands ]</a>
-                    </nav>
-                    <div class="h-4 w-px bg-term-dim hidden md:block"></div>
-                    <a class="text-term-green hover:text-white flex items-center gap-2 group" href="https://github.com/ServiceWeave/bashlet">
-                        <span class="group-hover:animate-pulse">&gt;</span> git clone bashlet
-                    </a>
-                </div>
-            </div>
-        </div>
-    </header>
-
     <main class="flex-grow">
         <!-- Hero Section -->
         <section class="relative pt-16 pb-24 overflow-hidden border-b border-dashed border-term-dim">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
                 <div class="grid lg:grid-cols-2 gap-12 lg:gap-16 items-start">
                     <div class="flex flex-col gap-6 pt-4">
+                        <div class="flex items-center gap-2 mb-4">
+                            <span class="text-term-green font-bold text-2xl">&gt;_</span>
+                            <span class="font-bold text-white text-2xl">Bashlet</span>
+                        </div>
+
                         <div class="font-mono text-xs text-term-gray mb-2">
                             Last login: <span id="current-date">Tue Oct 24 10:42:15</span> on ttys001
                         </div>
@@ -181,18 +163,7 @@
                             </p>
                         </div>
 
-                        <div class="flex flex-wrap items-center gap-4 mt-6">
-                            <a href="https://github.com/ServiceWeave/bashlet" class="bg-term-green text-black border border-term-green h-12 px-6 font-bold text-sm hover:bg-transparent hover:text-term-green transition-all term-btn flex items-center gap-2">
-                                <span class="material-symbols-outlined text-[18px]">terminal</span>
-                                $ bashlet init
-                            </a>
-                            <a href="#usage" class="bg-transparent text-term-amber border border-term-amber h-12 px-6 font-bold text-sm hover:bg-term-amber hover:text-black transition-all term-btn-amber flex items-center gap-2">
-                                <span class="material-symbols-outlined text-[18px]">description</span>
-                                man bashlet
-                            </a>
-                        </div>
-
-                        <div class="mt-8 w-full max-w-[480px]">
+                        <div class="mt-6 w-full max-w-[480px]">
                             <div class="flex items-center justify-between gap-3 px-4 py-3 bg-term-dim/30 border border-term-dim font-mono text-sm hover:border-term-green transition-colors group relative">
                                 <div class="absolute -top-3 left-2 bg-term-bg px-1 text-xs text-term-gray">quick_install.sh</div>
                                 <div class="flex items-center gap-3 overflow-hidden w-full">
@@ -202,17 +173,6 @@
                                 <button onclick="copyInstall(this)" class="shrink-0 text-term-gray hover:text-white transition-colors" title="Copy">
                                     <span class="material-symbols-outlined text-[16px]">content_copy</span>
                                 </button>
-                            </div>
-                        </div>
-
-                        <div class="pt-4 flex items-center gap-6 text-xs text-term-gray font-mono uppercase tracking-widest">
-                            <div class="flex items-center gap-2">
-                                <span class="text-term-green">[ OK ]</span>
-                                <span>Sandboxed</span>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <span class="text-term-green">[ OK ]</span>
-                                <span>Open Source</span>
                             </div>
                         </div>
                     </div>
@@ -586,31 +546,6 @@ bashlet agent <span class="string">"analyze the code and find potential bugs"</s
                             </tr>
                         </tbody>
                     </table>
-                </div>
-            </div>
-        </section>
-
-        <!-- CTA Section -->
-        <section class="py-24 bg-black border-t border-term-dim">
-            <div class="max-w-4xl mx-auto px-4 text-center">
-                <div class="inline-block mb-6 text-term-green animate-pulse">
-                    <span class="material-symbols-outlined text-6xl">terminal</span>
-                </div>
-                <h2 class="font-mono text-3xl sm:text-5xl font-bold text-white mb-6 uppercase tracking-tight">
-                    Ready to <span class="text-term-green">sandbox</span>?
-                </h2>
-                <div class="border-y border-term-dim py-6 mb-10 max-w-2xl mx-auto bg-term-dim/10">
-                    <p class="text-lg text-term-gray font-mono">
-                        Give your AI agents the tools they were trained on.<br/>
-                        Open source and free forever.
-                    </p>
-                </div>
-                <div class="flex flex-col sm:flex-row gap-6 justify-center max-w-md mx-auto">
-                    <a href="https://github.com/ServiceWeave/bashlet" class="bg-white text-black h-14 px-8 font-bold font-mono text-lg hover:bg-term-green transition-colors w-full border-2 border-transparent hover:border-white flex items-center justify-center gap-2 group">
-                        <span class="group-hover:hidden">&gt;</span>
-                        <span class="hidden group-hover:inline">$</span>
-                        ./get_started.sh
-                    </a>
                 </div>
             </div>
         </section>
