@@ -5,8 +5,8 @@ use tracing::info;
 
 use crate::agent::Agent;
 use crate::cli::args::{
-    AgentArgs, ConfigAction, ConfigArgs, CreateArgs, ExecArgs, InitArgs, ListArgs, OutputFormat,
-    SessionRunArgs, TerminateArgs,
+    AgentArgs, ConfigAction, ConfigArgs, CreateArgs, ExecArgs, InitArgs, ListArgs,
+    NativeIsolation, OutputFormat, SessionRunArgs, TerminateArgs,
 };
 use crate::config::loader::get_config_path;
 use crate::config::types::BashletConfig;
@@ -133,6 +133,8 @@ pub async fn exec(args: ExecArgs, config: BashletConfig, format: OutputFormat) -
         wasm_binary: args.wasm.or(config.sandbox.wasm_binary),
         mounts: args.mounts,
         tools: args.tools,
+        native_tools: args.native_tools,
+        native_isolation: args.native_isolation,
         env_vars: args.env_vars,
         workdir: args.workdir,
         memory_limit_mb: config.sandbox.memory_limit_mb,
@@ -244,6 +246,8 @@ pub async fn agent(args: AgentArgs, config: BashletConfig) -> Result<()> {
         wasm_binary: args.wasm.or(config.sandbox.wasm_binary.clone()),
         mounts: args.mounts,
         tools: args.tools,
+        native_tools: args.native_tools,
+        native_isolation: args.native_isolation,
         env_vars: args.env_vars,
         workdir: args.workdir,
         memory_limit_mb: config.sandbox.memory_limit_mb,
@@ -327,6 +331,9 @@ fn session_to_sandbox_config(session: &Session, config: &BashletConfig) -> Sandb
             .or(config.sandbox.wasm_binary.clone()),
         mounts: session.get_mounts(),
         tools: session.tools.clone(),
+        // Native tools are not persisted in sessions (use exec for native tools)
+        native_tools: Vec::new(),
+        native_isolation: NativeIsolation::None,
         env_vars: session.env_vars.clone(),
         workdir: session.workdir.clone(),
         memory_limit_mb: config.sandbox.memory_limit_mb,

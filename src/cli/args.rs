@@ -73,6 +73,19 @@ pub struct CreateArgs {
     #[clap(long = "tool", short = 't')]
     pub tools: Vec<String>,
 
+    /// Mount native host tools into sandbox (BREAKS SANDBOX SECURITY!)
+    /// Format: name or name:/path/to/binary
+    /// WARNING: Native tools execute on the host with full permissions
+    #[clap(long = "native-tool", value_parser = parse_native_tool)]
+    pub native_tools: Vec<NativeTool>,
+
+    /// Isolation level for native tools
+    /// - none: Full host access (DANGEROUS, default)
+    /// - bwrap: Use bubblewrap to restrict to mounted paths only
+    /// - docker: Use Docker for isolation
+    #[clap(long = "native-isolation", default_value = "none", value_enum)]
+    pub native_isolation: NativeIsolation,
+
     /// Environment variables to set in sandbox (KEY=VALUE)
     #[clap(long = "env", short = 'e', value_parser = parse_env_var)]
     pub env_vars: Vec<(String, String)>,
@@ -117,6 +130,19 @@ pub struct ExecArgs {
     /// Mount CLI tools from Wasmer registry (e.g., python, cowsay, wasmer/python@3.11)
     #[clap(long = "tool", short = 't')]
     pub tools: Vec<String>,
+
+    /// Mount native host tools into sandbox (BREAKS SANDBOX SECURITY!)
+    /// Format: name or name:/path/to/binary
+    /// WARNING: Native tools execute on the host with full permissions
+    #[clap(long = "native-tool", value_parser = parse_native_tool)]
+    pub native_tools: Vec<NativeTool>,
+
+    /// Isolation level for native tools
+    /// - none: Full host access (DANGEROUS, default)
+    /// - bwrap: Use bubblewrap to restrict to mounted paths only
+    /// - docker: Use Docker for isolation
+    #[clap(long = "native-isolation", default_value = "none", value_enum)]
+    pub native_isolation: NativeIsolation,
 
     /// Environment variables to set in sandbox (KEY=VALUE)
     #[clap(long = "env", short = 'e', value_parser = parse_env_var)]
@@ -167,6 +193,19 @@ pub struct AgentArgs {
     #[clap(long = "tool", short = 't')]
     pub tools: Vec<String>,
 
+    /// Mount native host tools into sandbox (BREAKS SANDBOX SECURITY!)
+    /// Format: name or name:/path/to/binary
+    /// WARNING: Native tools execute on the host with full permissions
+    #[clap(long = "native-tool", value_parser = parse_native_tool)]
+    pub native_tools: Vec<NativeTool>,
+
+    /// Isolation level for native tools
+    /// - none: Full host access (DANGEROUS, default)
+    /// - bwrap: Use bubblewrap to restrict to mounted paths only
+    /// - docker: Use Docker for isolation
+    #[clap(long = "native-isolation", default_value = "none", value_enum)]
+    pub native_isolation: NativeIsolation,
+
     /// Environment variables to set in sandbox (KEY=VALUE)
     #[clap(long = "env", short = 'e', value_parser = parse_env_var)]
     pub env_vars: Vec<(String, String)>,
@@ -214,6 +253,42 @@ pub struct Mount {
     pub host_path: PathBuf,
     pub guest_path: String,
     pub readonly: bool,
+}
+
+/// A native tool to be made available in the sandbox via host proxy
+#[derive(Debug, Clone)]
+pub struct NativeTool {
+    /// Name of the tool (how it will be called in sandbox)
+    pub name: String,
+    /// Path to the binary on host (if different from name)
+    pub host_path: Option<PathBuf>,
+}
+
+/// Isolation level for native tools
+#[derive(Debug, Clone, Copy, Default, ValueEnum, PartialEq)]
+pub enum NativeIsolation {
+    /// No isolation - native tools have full host access (DANGEROUS)
+    #[default]
+    None,
+    /// Use bwrap/bubblewrap to restrict filesystem access to mounted paths only
+    Bwrap,
+    /// Use Docker to isolate native tools (requires Docker)
+    Docker,
+}
+
+fn parse_native_tool(s: &str) -> Result<NativeTool, String> {
+    // Format: name or name:path
+    if let Some((name, path)) = s.split_once(':') {
+        Ok(NativeTool {
+            name: name.to_string(),
+            host_path: Some(PathBuf::from(path)),
+        })
+    } else {
+        Ok(NativeTool {
+            name: s.to_string(),
+            host_path: None,
+        })
+    }
 }
 
 fn parse_mount(s: &str) -> Result<Mount, String> {
