@@ -46,6 +46,13 @@ impl SandboxExecutor {
         let mut cmd = Command::new("wasmer");
         cmd.arg("run");
 
+        // Add CLI tools from Wasmer registry using --use flag
+        for tool in &self.config.tools {
+            debug!(tool = %tool, "Adding tool to sandbox");
+            cmd.arg("--use");
+            cmd.arg(tool);
+        }
+
         // Add directory mappings
         for mount in &self.config.mounts {
             if !mount.host_path.exists() {

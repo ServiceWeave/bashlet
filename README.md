@@ -60,6 +60,27 @@ With environment variables:
 bashlet exec --env MESSAGE="Hello" "echo $MESSAGE"
 ```
 
+### Mounting CLI Tools
+
+You can mount CLI tools from the Wasmer registry into your sandbox. These are WASM-compiled tools that run natively in the sandbox.
+
+```bash
+# Run Python in the sandbox
+bashlet exec --tool python "python --version"
+
+# Use cowsay
+bashlet exec --tool cowsay "cowsay 'Hello from sandbox!'"
+
+# Multiple tools
+bashlet exec --tool python --tool cowsay "python -c \"print('Hello')\" && cowsay 'Moo'"
+```
+
+With specific package versions:
+
+```bash
+bashlet exec --tool wasmer/python@3.11 "python --version"
+```
+
 ### Session Management
 
 Sessions allow you to create persistent sandbox environments that maintain their configuration across multiple commands.
@@ -141,6 +162,7 @@ Arguments:
 
 Options:
   -m, --mount <MOUNT>   Mount host directories (host_path:guest_path[:ro])
+  -t, --tool <TOOL>     Mount CLI tools from Wasmer registry (e.g., python, cowsay)
   -e, --env <ENV>       Environment variables (KEY=VALUE)
   -w, --workdir <DIR>   Working directory in sandbox [default: /workspace]
       --wasm <WASM>     Custom WASM binary for sandbox
@@ -156,6 +178,7 @@ bashlet create [OPTIONS]
 Options:
   -n, --name <NAME>     Session name (auto-generated if not provided)
   -m, --mount <MOUNT>   Mount host directories (host_path:guest_path[:ro])
+  -t, --tool <TOOL>     Mount CLI tools from Wasmer registry (e.g., python, cowsay)
   -e, --env <ENV>       Environment variables (KEY=VALUE)
   -w, --workdir <DIR>   Working directory in sandbox [default: /workspace]
       --wasm <WASM>     Custom WASM binary for sandbox
@@ -172,6 +195,30 @@ Mounts follow Docker-style syntax:
 | `./src:/workspace` | Mount `./src` to `/workspace` (read-write) |
 | `./src:/workspace:ro` | Mount `./src` to `/workspace` (read-only) |
 
+### Tool Syntax
+
+Tools are specified using Wasmer package names:
+
+| Format | Description |
+|--------|-------------|
+| `python` | Latest version of the python package |
+| `cowsay` | Latest version of cowsay |
+| `wasmer/python` | Python from the wasmer namespace |
+| `wasmer/python@3.11` | Specific version of Python |
+
+Popular tools available in the Wasmer registry:
+
+| Tool | Description |
+|------|-------------|
+| `python` | Python interpreter |
+| `cowsay` | ASCII cow message generator |
+| `figlet` | ASCII art text generator |
+| `sqlite` | SQLite database |
+| `grep` | Pattern matching |
+| `sed` | Stream editor |
+
+Browse available packages at [wasmer.io/explore](https://wasmer.io/explore).
+
 ### TTL Syntax
 
 | Format | Description |
@@ -185,6 +232,7 @@ Mounts follow Docker-style syntax:
 1. **WEBC Download**: On first run, bashlet downloads the bash WEBC package from the Wasmer CDN and caches it locally
 
 2. **Wasmer Execution**: Commands are executed via `wasmer run` with:
+   - `--use` for CLI tool packages from Wasmer registry
    - `--mapdir` for mount points
    - `--env` for environment variables
    - The cached WEBC package

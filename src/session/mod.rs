@@ -18,6 +18,9 @@ pub struct Session {
     pub name: Option<String>,
     /// Mount configurations
     pub mounts: Vec<SerializableMount>,
+    /// CLI tools from Wasmer registry to include
+    #[serde(default)]
+    pub tools: Vec<String>,
     /// Environment variables
     pub env_vars: Vec<(String, String)>,
     /// Working directory inside sandbox
@@ -65,6 +68,7 @@ impl Session {
     pub fn new(
         name: Option<String>,
         mounts: Vec<Mount>,
+        tools: Vec<String>,
         env_vars: Vec<(String, String)>,
         workdir: String,
         wasm_binary: Option<PathBuf>,
@@ -82,6 +86,7 @@ impl Session {
             id,
             name,
             mounts: mounts.iter().map(SerializableMount::from).collect(),
+            tools,
             env_vars,
             workdir,
             wasm_binary,

@@ -42,6 +42,7 @@ pub async fn create(args: CreateArgs, config: BashletConfig, format: OutputForma
     let session = Session::new(
         args.name,
         args.mounts,
+        args.tools,
         args.env_vars,
         args.workdir,
         args.wasm.or(config.sandbox.wasm_binary.clone()),
@@ -131,6 +132,7 @@ pub async fn exec(args: ExecArgs, config: BashletConfig, format: OutputFormat) -
     let sandbox_config = SandboxConfig {
         wasm_binary: args.wasm.or(config.sandbox.wasm_binary),
         mounts: args.mounts,
+        tools: args.tools,
         env_vars: args.env_vars,
         workdir: args.workdir,
         memory_limit_mb: config.sandbox.memory_limit_mb,
@@ -206,6 +208,7 @@ pub async fn list(args: ListArgs, format: OutputFormat) -> Result<()> {
                         "ttl_seconds": s.ttl_seconds,
                         "expired": s.is_expired(),
                         "mounts": s.mounts,
+                        "tools": s.tools,
                         "workdir": s.workdir,
                     })
                 })
@@ -240,6 +243,7 @@ pub async fn agent(args: AgentArgs, config: BashletConfig) -> Result<()> {
     let sandbox_config = SandboxConfig {
         wasm_binary: args.wasm.or(config.sandbox.wasm_binary.clone()),
         mounts: args.mounts,
+        tools: args.tools,
         env_vars: args.env_vars,
         workdir: args.workdir,
         memory_limit_mb: config.sandbox.memory_limit_mb,
@@ -322,6 +326,7 @@ fn session_to_sandbox_config(session: &Session, config: &BashletConfig) -> Sandb
             .clone()
             .or(config.sandbox.wasm_binary.clone()),
         mounts: session.get_mounts(),
+        tools: session.tools.clone(),
         env_vars: session.env_vars.clone(),
         workdir: session.workdir.clone(),
         memory_limit_mb: config.sandbox.memory_limit_mb,

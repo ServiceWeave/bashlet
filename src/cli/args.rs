@@ -69,6 +69,10 @@ pub struct CreateArgs {
     #[clap(long = "mount", short = 'm', value_parser = parse_mount)]
     pub mounts: Vec<Mount>,
 
+    /// Mount CLI tools from Wasmer registry (e.g., python, cowsay, wasmer/python@3.11)
+    #[clap(long = "tool", short = 't')]
+    pub tools: Vec<String>,
+
     /// Environment variables to set in sandbox (KEY=VALUE)
     #[clap(long = "env", short = 'e', value_parser = parse_env_var)]
     pub env_vars: Vec<(String, String)>,
@@ -109,6 +113,10 @@ pub struct ExecArgs {
     /// Mount host directories into sandbox (host_path:guest_path[:ro])
     #[clap(long = "mount", short = 'm', value_parser = parse_mount)]
     pub mounts: Vec<Mount>,
+
+    /// Mount CLI tools from Wasmer registry (e.g., python, cowsay, wasmer/python@3.11)
+    #[clap(long = "tool", short = 't')]
+    pub tools: Vec<String>,
 
     /// Environment variables to set in sandbox (KEY=VALUE)
     #[clap(long = "env", short = 'e', value_parser = parse_env_var)]
@@ -154,6 +162,10 @@ pub struct AgentArgs {
     /// Mount host directories into sandbox (host_path:guest_path[:ro])
     #[clap(long = "mount", short = 'm', value_parser = parse_mount)]
     pub mounts: Vec<Mount>,
+
+    /// Mount CLI tools from Wasmer registry (e.g., python, cowsay, wasmer/python@3.11)
+    #[clap(long = "tool", short = 't')]
+    pub tools: Vec<String>,
 
     /// Environment variables to set in sandbox (KEY=VALUE)
     #[clap(long = "env", short = 'e', value_parser = parse_env_var)]
