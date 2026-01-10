@@ -18,7 +18,7 @@ tokio = { version = "1", features = ["full", "process"] }
 async-trait = "0.1"
 
 # HTTP client for downloading WASM
-reqwest = { version = "0.12", features = ["json"] }
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
 
 # Configuration
 serde = { version = "1", features = ["derive"] }
