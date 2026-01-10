@@ -1,21 +1,17 @@
-mod executor;
+mod backends;
+mod factory;
+mod traits;
 
-use std::path::PathBuf;
+#[cfg(feature = "wasmer")]
+pub use backends::WasmerBackend;
 
-pub use executor::SandboxExecutor;
+#[cfg(all(feature = "firecracker", target_os = "linux"))]
+pub use backends::FirecrackerBackend;
 
-use crate::cli::args::Mount;
+pub use factory::{available_backends, create_backend, BackendInfo, RuntimeConfig};
+pub use traits::{BackendCapabilities, SandboxBackend, SandboxInfo};
 
-#[derive(Debug, Clone)]
-pub struct SandboxConfig {
-    pub wasm_binary: Option<PathBuf>,
-    pub mounts: Vec<Mount>,
-    pub env_vars: Vec<(String, String)>,
-    pub workdir: String,
-    pub memory_limit_mb: u64,
-    pub timeout_seconds: u64,
-}
-
+/// Result of executing a command in the sandbox.
 #[derive(Debug)]
 pub struct CommandResult {
     pub stdout: String,

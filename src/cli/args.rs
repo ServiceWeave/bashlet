@@ -1,6 +1,8 @@
 use clap::{Args, Parser, Subcommand, ValueEnum};
 use std::path::PathBuf;
 
+use crate::config::types::BackendType;
+
 #[derive(Parser, Debug)]
 #[clap(name = "bashlet")]
 #[clap(version, about = "Sandboxed bash execution environment")]
@@ -106,6 +108,10 @@ pub struct ExecArgs {
     /// Command to execute
     pub command: String,
 
+    /// Sandbox backend to use (wasmer, firecracker, auto)
+    #[clap(long, short = 'b', value_enum)]
+    pub backend: Option<BackendType>,
+
     /// Mount host directories into sandbox (host_path:guest_path[:ro])
     #[clap(long = "mount", short = 'm', value_parser = parse_mount)]
     pub mounts: Vec<Mount>,
@@ -118,7 +124,7 @@ pub struct ExecArgs {
     #[clap(long, default_value = "/workspace")]
     pub workdir: String,
 
-    /// WASM binary to use as sandbox environment
+    /// WASM binary to use as sandbox environment (deprecated, use --backend wasmer)
     #[clap(long)]
     pub wasm: Option<PathBuf>,
 }
@@ -147,7 +153,11 @@ pub struct AgentArgs {
     #[clap(long)]
     pub model: Option<String>,
 
-    /// WASM binary to use as sandbox environment
+    /// Sandbox backend to use (wasmer, firecracker, auto)
+    #[clap(long, short = 'b', value_enum)]
+    pub backend: Option<BackendType>,
+
+    /// WASM binary to use as sandbox environment (deprecated, use --backend wasmer)
     #[clap(long)]
     pub wasm: Option<PathBuf>,
 

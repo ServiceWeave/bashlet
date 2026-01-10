@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bashlet - Sandboxed Bash Execution</title>
+    <meta name="description" content="Run shell commands in a secure WebAssembly sandbox. Bashlet provides isolated bash execution with directory mounting and session management.">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐚</text></svg>">
+    <style>
+        :root {
+            --bg: #0d1117;
+            --bg-secondary: #161b22;
+            --border: #30363d;
+            --text: #e6edf3;
+            --text-muted: #8b949e;
+            --accent: #58a6ff;
+            --accent-hover: #79b8ff;
+            --green: #3fb950;
+            --code-bg: #0d1117;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        header {
+            padding: 80px 0 60px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+            letter-spacing: -0.02em;
+        }
+
+        .tagline {
+            font-size: 1.25rem;
+            color: var(--text-muted);
+            max-width: 600px;
+            margin: 0 auto 32px;
+        }
+
+        .badges {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .badge svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        section {
+            margin-bottom: 64px;
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 24px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .code-block {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 16px;
+        }
+
+        .code-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 16px;
+            background: rgba(0, 0, 0, 0.2);
+            border-bottom: 1px solid var(--border);
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .copy-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            transition: all 0.2s;
+        }
+
+        .copy-btn:hover {
+            background: var(--border);
+            color: var(--text);
+        }
+
+        pre {
+            padding: 16px;
+            overflow-x: auto;
+            font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+            font-size: 0.875rem;
+            line-height: 1.5;
+        }
+
+        code {
+            font-family: inherit;
+        }
+
+        .comment {
+            color: var(--text-muted);
+        }
+
+        .command {
+            color: var(--green);
+        }
+
+        .string {
+            color: #a5d6ff;
+        }
+
+        .flag {
+            color: #ff7b72;
+        }
+
+        p {
+            color: var(--text-muted);
+            margin-bottom: 16px;
+        }
+
+        .subsection {
+            margin-bottom: 32px;
+        }
+
+        .subsection h3 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: var(--text);
+        }
+
+        .command-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 16px;
+        }
+
+        .command-table th,
+        .command-table td {
+            text-align: left;
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .command-table th {
+            font-weight: 600;
+            color: var(--text);
+            background: var(--bg-secondary);
+        }
+
+        .command-table td:first-child {
+            font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+            font-size: 0.875rem;
+            color: var(--accent);
+            white-space: nowrap;
+        }
+
+        .command-table td:last-child {
+            color: var(--text-muted);
+        }
+
+        footer {
+            text-align: center;
+            padding: 48px 0;
+            border-top: 1px solid var(--border);
+            color: var(--text-muted);
+            font-size: 0.875rem;
+        }
+
+        footer a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        .github-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .github-link:hover {
+            color: var(--accent-hover);
+        }
+
+        .github-link svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        @media (max-width: 640px) {
+            header {
+                padding: 48px 0 40px;
+            }
+
+            h1 {
+                font-size: 2.5rem;
+            }
+
+            .tagline {
+                font-size: 1.125rem;
+            }
+
+            pre {
+                font-size: 0.8rem;
+            }
+
+            .command-table td:first-child {
+                font-size: 0.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Bashlet</h1>
+            <p class="tagline">Sandboxed bash execution using WebAssembly. Run shell commands in secure isolation with directory mounting and session management.</p>
+            <div class="badges">
+                <span class="badge">
+                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+                    WASM Sandbox
+                </span>
+                <span class="badge">
+                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
+                    Secure Isolation
+                </span>
+                <span class="badge">
+                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 6h-8l-2-2H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 12H4V8h16v10z"/></svg>
+                    Directory Mounting
+                </span>
+            </div>
+        </header>
+
+        <section>
+            <h2>Installation</h2>
+
+            <div class="subsection">
+                <h3>1. Install Wasmer</h3>
+                <p>Bashlet requires the Wasmer runtime for WebAssembly execution.</p>
+                <div class="code-block">
+                    <div class="code-header">
+                        <span>Shell</span>
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                    </div>
+                    <pre><code>curl https://get.wasmer.io -sSfL | sh</code></pre>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3>2. Install Bashlet</h3>
+                <div class="code-block">
+                    <div class="code-header">
+                        <span>Quick Install (macOS/Linux)</span>
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                    </div>
+                    <pre><code>curl -fsSL https://bashlet.dev/install.sh | sh</code></pre>
+                </div>
+
+                <p style="margin-top: 24px;">Or build from source:</p>
+                <div class="code-block">
+                    <div class="code-header">
+                        <span>From Source</span>
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                    </div>
+                    <pre><code>git clone https://github.com/ServiceWeave/bashlet.git
+cd bashlet
+cargo build --release</code></pre>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <h2>Usage</h2>
+
+            <div class="subsection">
+                <h3>One-Shot Execution</h3>
+                <p>Run a single command in an isolated sandbox.</p>
+                <div class="code-block">
+                    <div class="code-header">
+                        <span>Shell</span>
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                    </div>
+                    <pre><code><span class="comment"># Basic command</span>
+bashlet exec <span class="string">"echo hello world"</span>
+
+<span class="comment"># With mounted directory</span>
+bashlet exec <span class="flag">--mount</span> ./src:/workspace <span class="string">"ls /workspace"</span>
+
+<span class="comment"># With environment variables</span>
+bashlet exec <span class="flag">--env</span> MESSAGE=<span class="string">"Hello"</span> <span class="string">"echo \$MESSAGE"</span></code></pre>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3>Session Management</h3>
+                <p>Create persistent sandbox sessions that maintain configuration across commands.</p>
+                <div class="code-block">
+                    <div class="code-header">
+                        <span>Shell</span>
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                    </div>
+                    <pre><code><span class="comment"># Create a session</span>
+bashlet create <span class="flag">--name</span> my-session <span class="flag">--mount</span> ./src:/workspace
+
+<span class="comment"># Run commands in the session</span>
+bashlet run my-session <span class="string">"ls /workspace"</span>
+bashlet run my-session <span class="string">"cat /workspace/README.md"</span>
+
+<span class="comment"># List active sessions</span>
+bashlet list
+
+<span class="comment"># Terminate when done</span>
+bashlet terminate my-session</code></pre>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3>AI Agent Mode</h3>
+                <p>Run an AI agent that executes commands in the sandbox.</p>
+                <div class="code-block">
+                    <div class="code-header">
+                        <span>Shell</span>
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                    </div>
+                    <pre><code><span class="comment"># Set API key</span>
+export ANTHROPIC_API_KEY=<span class="string">"your-api-key"</span>
+
+<span class="comment"># Run agent with a task</span>
+bashlet agent <span class="string">"analyze the code and find potential bugs"</span> <span class="flag">--mount</span> ./src:/workspace</code></pre>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <h2>Command Reference</h2>
+            <table class="command-table">
+                <thead>
+                    <tr>
+                        <th>Command</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>bashlet exec "cmd"</td>
+                        <td>One-shot command execution in sandbox</td>
+                    </tr>
+                    <tr>
+                        <td>bashlet create</td>
+                        <td>Create a new persistent session</td>
+                    </tr>
+                    <tr>
+                        <td>bashlet run SESSION "cmd"</td>
+                        <td>Run command in an existing session</td>
+                    </tr>
+                    <tr>
+                        <td>bashlet list</td>
+                        <td>List all active sessions</td>
+                    </tr>
+                    <tr>
+                        <td>bashlet terminate SESSION</td>
+                        <td>Terminate a session</td>
+                    </tr>
+                    <tr>
+                        <td>bashlet agent "task"</td>
+                        <td>Run AI agent with sandbox access</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <footer>
+            <p style="margin-bottom: 16px;">
+                <a href="https://github.com/ServiceWeave/bashlet" class="github-link">
+                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                    View on GitHub
+                </a>
+            </p>
+            <p>MIT License</p>
+        </footer>
+    </div>
+
+    <script>
+        function copyCode(button) {
+            const pre = button.closest('.code-block').querySelector('pre');
+            const code = pre.textContent;
+            navigator.clipboard.writeText(code).then(() => {
+                button.textContent = 'Copied!';
+                setTimeout(() => {
+                    button.textContent = 'Copy';
+                }, 2000);
+            });
+        }
+    </script>
+</body>
+</html>

@@ -12,7 +12,7 @@ use crate::config::loader::get_config_path;
 use crate::config::types::BashletConfig;
 use crate::error::Result;
 use crate::providers::registry::create_provider;
-use crate::sandbox::{CommandResult, SandboxConfig, SandboxExecutor};
+use crate::sandbox::{create_backend, CommandResult, RuntimeConfig};
 use crate::session::{parse_ttl, Session, SessionManager};
 
 // ============================================================================
@@ -38,19 +38,31 @@ pub async fn create(args: CreateArgs, config: BashletConfig, format: OutputForma
         None => None,
     };
 
+    // Handle legacy --wasm flag by updating wasmer config
+    let mut sandbox_config = config.sandbox.clone();
+    if let Some(wasm_path) = args.wasm {
+        sandbox_config.wasmer.wasm_binary = Some(wasm_path);
+    }
+
     // Create session
     let session = Session::new(
         args.name,
-        args.mounts,
-        args.env_vars,
-        args.workdir,
-        args.wasm.or(config.sandbox.wasm_binary.clone()),
+        args.mounts.clone(),
+        args.env_vars.clone(),
+        args.workdir.clone(),
+        sandbox_config.wasmer.wasm_binary.clone(),
         ttl_seconds,
     );
 
     // Test that the sandbox can be initialized
-    let sandbox_config = session_to_sandbox_config(&session, &config);
-    SandboxExecutor::new(sandbox_config).await?;
+    let runtime = RuntimeConfig {
+        mounts: args.mounts,
+        env_vars: args.env_vars,
+        workdir: args.workdir,
+        memory_limit_mb: sandbox_config.memory_limit_mb,
+        timeout_seconds: sandbox_config.timeout_seconds,
+    };
+    create_backend(&sandbox_config, runtime).await?;
 
     // Save session
     let session_id = session.id.clone();
@@ -89,10 +101,22 @@ pub async fn run(args: SessionRunArgs, config: BashletConfig, format: OutputForm
     let session = manager.get(&args.session).await?;
     manager.touch(&args.session).await?;
 
-    // Create executor and run command
-    let sandbox_config = session_to_sandbox_config(&session, &config);
-    let executor = SandboxExecutor::new(sandbox_config).await?;
-    let result = executor.execute(&args.command).await?;
+    // Build sandbox config from session
+    let mut sandbox_config = config.sandbox.clone();
+    if let Some(wasm_path) = &session.wasm_binary {
+        sandbox_config.wasmer.wasm_binary = Some(wasm_path.clone());
+    }
+
+    let runtime = RuntimeConfig {
+        mounts: session.get_mounts(),
+        env_vars: session.env_vars.clone(),
+        workdir: session.workdir.clone(),
+        memory_limit_mb: sandbox_config.memory_limit_mb,
+        timeout_seconds: sandbox_config.timeout_seconds,
+    };
+
+    let backend = create_backend(&sandbox_config, runtime).await?;
+    let result = backend.execute(&args.command).await?;
 
     output_command_result(&result, format);
 
@@ -127,18 +151,29 @@ pub async fn terminate(args: TerminateArgs, format: OutputFormat) -> Result<()> 
 pub async fn exec(args: ExecArgs, config: BashletConfig, format: OutputFormat) -> Result<()> {
     info!(command = %args.command, "Executing one-shot command");
 
-    // Build sandbox config directly without session
-    let sandbox_config = SandboxConfig {
-        wasm_binary: args.wasm.or(config.sandbox.wasm_binary),
+    // Build sandbox config
+    let mut sandbox_config = config.sandbox.clone();
+
+    // Override backend if specified
+    if let Some(backend) = args.backend {
+        sandbox_config.backend = backend;
+    }
+
+    // Handle legacy --wasm flag
+    if let Some(wasm_path) = args.wasm {
+        sandbox_config.wasmer.wasm_binary = Some(wasm_path);
+    }
+
+    let runtime = RuntimeConfig {
         mounts: args.mounts,
         env_vars: args.env_vars,
         workdir: args.workdir,
-        memory_limit_mb: config.sandbox.memory_limit_mb,
-        timeout_seconds: config.sandbox.timeout_seconds,
+        memory_limit_mb: sandbox_config.memory_limit_mb,
+        timeout_seconds: sandbox_config.timeout_seconds,
     };
 
-    let executor = SandboxExecutor::new(sandbox_config).await?;
-    let result = executor.execute(&args.command).await?;
+    let backend = create_backend(&sandbox_config, runtime).await?;
+    let result = backend.execute(&args.command).await?;
 
     output_command_result(&result, format);
 
@@ -237,17 +272,32 @@ pub async fn agent(args: AgentArgs, config: BashletConfig) -> Result<()> {
     let provider = create_provider(&args.provider, model.as_deref(), &config)?;
 
     // Build sandbox configuration
-    let sandbox_config = SandboxConfig {
-        wasm_binary: args.wasm.or(config.sandbox.wasm_binary.clone()),
+    let mut sandbox_config = config.sandbox.clone();
+
+    // Override backend if specified
+    if let Some(backend) = args.backend {
+        sandbox_config.backend = backend;
+    }
+
+    // Handle legacy --wasm flag
+    if let Some(wasm_path) = args.wasm {
+        sandbox_config.wasmer.wasm_binary = Some(wasm_path);
+    }
+
+    let workdir = args.workdir.clone();
+    let runtime = RuntimeConfig {
         mounts: args.mounts,
         env_vars: args.env_vars,
         workdir: args.workdir,
-        memory_limit_mb: config.sandbox.memory_limit_mb,
-        timeout_seconds: config.sandbox.timeout_seconds,
+        memory_limit_mb: sandbox_config.memory_limit_mb,
+        timeout_seconds: sandbox_config.timeout_seconds,
     };
 
+    // Create sandbox backend
+    let backend = create_backend(&sandbox_config, runtime).await?;
+
     // Create and run agent
-    let agent = Agent::new(provider, sandbox_config, args.max_iterations).await?;
+    let agent = Agent::new(provider, backend, workdir, args.max_iterations);
 
     let result = agent.run(&args.task).await?;
 
@@ -314,20 +364,6 @@ pub async fn config(args: ConfigArgs, config: BashletConfig) -> Result<()> {
 // ============================================================================
 // Helper Functions
 // ============================================================================
-
-fn session_to_sandbox_config(session: &Session, config: &BashletConfig) -> SandboxConfig {
-    SandboxConfig {
-        wasm_binary: session
-            .wasm_binary
-            .clone()
-            .or(config.sandbox.wasm_binary.clone()),
-        mounts: session.get_mounts(),
-        env_vars: session.env_vars.clone(),
-        workdir: session.workdir.clone(),
-        memory_limit_mb: config.sandbox.memory_limit_mb,
-        timeout_seconds: config.sandbox.timeout_seconds,
-    }
-}
 
 fn output_command_result(result: &CommandResult, format: OutputFormat) {
     match format {

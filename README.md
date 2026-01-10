@@ -1,42 +1,34 @@
 # Bashlet
 
-Sandboxed bash execution environment using WebAssembly.
+Sandboxed bash execution environment with multiple backend support.
 
-Bashlet runs shell commands inside a secure WASM sandbox powered by Wasmer. It supports both one-shot command execution and persistent sessions with mounted directories.
-
-## Prerequisites
-
-### Wasmer
-
-Bashlet requires [Wasmer](https://wasmer.io/) to be installed:
-
-```bash
-curl https://get.wasmer.io -sSfL | sh
-```
-
-Verify installation:
-
-```bash
-wasmer --version
-```
+Bashlet runs shell commands inside secure sandboxes with support for multiple isolation backends:
+- **Wasmer** (WASM) - Cross-platform, lightweight sandbox
+- **Firecracker** (microVM) - Full Linux VM isolation on Linux with KVM
 
 ## Installation
-
-### From Source
-
-```bash
-git clone https://github.com/ServiceWeave/bashlet.git
-cd bashlet
-cargo build --release
-```
-
-The binary will be at `./target/release/bashlet`.
 
 ### Quick Install (macOS/Linux)
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/ServiceWeave/bashlet/main/install.sh | sh
 ```
+
+This installs bashlet along with:
+- **Wasmer** - For WASM sandbox (all platforms)
+- **Firecracker** - For microVM sandbox (Linux only)
+
+All dependencies are automatically downloaded if not present at runtime.
+
+### From Source
+
+```bash
+git clone https://github.com/ServiceWeave/bashlet.git
+cd bashlet
+cargo build --release --features all-backends
+```
+
+The binary will be at `./target/release/bashlet`.
 
 ## Usage
 
@@ -58,6 +50,21 @@ With environment variables:
 
 ```bash
 bashlet exec --env MESSAGE="Hello" "echo $MESSAGE"
+```
+
+### Selecting a Backend
+
+By default, bashlet automatically selects the best available backend (`auto`). You can explicitly choose a backend:
+
+```bash
+# Use Wasmer (WASM sandbox)
+bashlet exec --backend wasmer "uname -a"
+
+# Use Firecracker (microVM, Linux only)
+bashlet exec --backend firecracker "uname -a"
+
+# Auto-select (default)
+bashlet exec --backend auto "uname -a"
 ```
 
 ### Session Management
@@ -140,12 +147,12 @@ Arguments:
   <COMMAND>  The shell command to execute
 
 Options:
-  -m, --mount <MOUNT>   Mount host directories (host_path:guest_path[:ro])
-  -e, --env <ENV>       Environment variables (KEY=VALUE)
-  -w, --workdir <DIR>   Working directory in sandbox [default: /workspace]
-      --wasm <WASM>     Custom WASM binary for sandbox
-  -v, --verbose         Enable verbose output
-  -h, --help            Print help
+  -m, --mount <MOUNT>      Mount host directories (host_path:guest_path[:ro])
+  -e, --env <ENV>          Environment variables (KEY=VALUE)
+  -w, --workdir <DIR>      Working directory in sandbox [default: /workspace]
+  -b, --backend <BACKEND>  Sandbox backend: auto, wasmer, firecracker [default: auto]
+  -v, --verbose            Enable verbose output
+  -h, --help               Print help
 ```
 
 ### Create Options
@@ -154,13 +161,13 @@ Options:
 bashlet create [OPTIONS]
 
 Options:
-  -n, --name <NAME>     Session name (auto-generated if not provided)
-  -m, --mount <MOUNT>   Mount host directories (host_path:guest_path[:ro])
-  -e, --env <ENV>       Environment variables (KEY=VALUE)
-  -w, --workdir <DIR>   Working directory in sandbox [default: /workspace]
-      --wasm <WASM>     Custom WASM binary for sandbox
-      --ttl <TTL>       Time-to-live (e.g., 30m, 1h, 2d)
-  -h, --help            Print help
+  -n, --name <NAME>        Session name (auto-generated if not provided)
+  -m, --mount <MOUNT>      Mount host directories (host_path:guest_path[:ro])
+  -e, --env <ENV>          Environment variables (KEY=VALUE)
+  -w, --workdir <DIR>      Working directory in sandbox [default: /workspace]
+  -b, --backend <BACKEND>  Sandbox backend: auto, wasmer, firecracker [default: auto]
+      --ttl <TTL>          Time-to-live (e.g., 30m, 1h, 2d)
+  -h, --help               Print help
 ```
 
 ### Mount Syntax
@@ -180,16 +187,68 @@ Mounts follow Docker-style syntax:
 | `1h` | 1 hour |
 | `2d` | 2 days |
 
+## Backends
+
+### Auto (Default)
+
+Automatically selects the best available backend:
+- Uses **Firecracker** on Linux with KVM support
+- Falls back to **Wasmer** on other platforms
+
+### Wasmer
+
+WASM-based sandbox using [Wasmer](https://wasmer.io/) runtime.
+
+| Feature | Support |
+|---------|---------|
+| Platforms | macOS, Linux, Windows |
+| Startup time | ~50ms |
+| Isolation | WASM sandbox |
+| Native Linux commands | Limited (WASI/WASIX) |
+| Networking | No |
+
+### Firecracker
+
+MicroVM-based sandbox using [Firecracker](https://firecracker-microvm.github.io/).
+
+| Feature | Support |
+|---------|---------|
+| Platforms | Linux with KVM |
+| Startup time | ~125ms (VM boot) |
+| Isolation | Hardware-level VM |
+| Native Linux commands | Full support |
+| Networking | Optional |
+
+**Requirements for Firecracker:**
+- Linux kernel with KVM support
+- Access to `/dev/kvm` (add user to `kvm` group)
+
+```bash
+# Check KVM support
+ls -la /dev/kvm
+
+# Add user to kvm group if needed
+sudo usermod -aG kvm $USER
+```
+
 ## How It Works
 
-1. **WEBC Download**: On first run, bashlet downloads the bash WEBC package from the Wasmer CDN and caches it locally
+### Wasmer Backend
 
-2. **Wasmer Execution**: Commands are executed via `wasmer run` with:
-   - `--mapdir` for mount points
-   - `--env` for environment variables
-   - The cached WEBC package
+1. **Auto-download**: Downloads Wasmer binary and bash WEBC package on first run
+2. **Execution**: Commands run via `wasmer run` with directory mounts and env vars
+3. **Isolation**: WASM sandbox provides memory and filesystem isolation
 
-3. **Session Persistence**: Sessions are stored as JSON files and can be resumed across CLI invocations
+### Firecracker Backend
+
+1. **Auto-download**: Downloads Firecracker binary, Linux kernel, and rootfs on first run
+2. **VM Boot**: Starts a lightweight microVM (~5MB memory overhead)
+3. **Guest Agent**: Communicates with VM via vsock for command execution
+4. **Isolation**: Hardware-level isolation via KVM
+
+### Session Persistence
+
+Sessions are stored as JSON files and can be resumed across CLI invocations.
 
 ### Cache Locations
 
@@ -221,9 +280,14 @@ temperature = 0.0
 max_tokens = 4096
 
 [sandbox]
+backend = "auto"  # auto, wasmer, or firecracker
 default_workdir = "/workspace"
 memory_limit_mb = 256
 timeout_seconds = 300
+
+[sandbox.firecracker]
+vcpu_count = 1
+enable_networking = false
 
 [providers.anthropic]
 api_key_env = "ANTHROPIC_API_KEY"
@@ -233,10 +297,6 @@ default_model = "claude-sonnet-4-20250514"
 api_key_env = "OPENAI_API_KEY"
 default_model = "gpt-4o"
 ```
-
-## Why Wasmer?
-
-Bashlet uses the Wasmer runtime because the bash WEBC package uses [WASIX](https://wasix.org/) extensions. WASIX extends WASI with additional POSIX-like functionality (file descriptors, process spawning, etc.) that standard WASI runtimes like wasmtime don't support.
 
 ## License
 

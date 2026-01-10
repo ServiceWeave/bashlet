@@ -1,0 +1,22 @@
+[package]
+name = "bashlet-agent"
+version = "0.1.0"
+edition = "2021"
+description = "Guest agent for bashlet Firecracker VMs"
+license = "MIT"
+
+[dependencies]
+# Serialization
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# Async runtime - minimal features for small binary
+tokio = { version = "1", features = ["rt", "io-util", "net", "process", "sync", "macros"] }
+
+# Vsock support (Linux only)
+[target.'cfg(target_os = "linux")'.dependencies]
+vsock = "0.5"
+
+[[bin]]
+name = "bashlet-agent"
+path = "src/main.rs"

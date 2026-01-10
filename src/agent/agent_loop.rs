@@ -7,30 +7,28 @@ use crate::error::{BashletError, Result};
 use crate::providers::traits::{
     AIProvider, ChatRequest, ContentBlock, Message, MessageContent, Role, StopReason,
 };
-use crate::sandbox::{SandboxConfig, SandboxExecutor};
+use crate::sandbox::SandboxBackend;
 
 pub struct Agent {
     provider: Arc<dyn AIProvider>,
-    executor: SandboxExecutor,
+    executor: Box<dyn SandboxBackend>,
     max_iterations: u32,
     workdir: String,
 }
 
 impl Agent {
-    pub async fn new(
+    pub fn new(
         provider: Arc<dyn AIProvider>,
-        config: SandboxConfig,
+        executor: Box<dyn SandboxBackend>,
+        workdir: String,
         max_iterations: u32,
-    ) -> Result<Self> {
-        let workdir = config.workdir.clone();
-        let executor = SandboxExecutor::new(config).await?;
-
-        Ok(Self {
+    ) -> Self {
+        Self {
             provider,
             executor,
             max_iterations,
             workdir,
-        })
+        }
     }
 
     pub async fn run(&self, task: &str) -> Result<String> {

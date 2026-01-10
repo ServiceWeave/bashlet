@@ -44,6 +44,25 @@ pub enum BashletError {
     #[error("WASM binary not found: {path}")]
     WasmNotFound { path: String },
 
+    // Backend errors
+    #[error("Backend '{backend}' is not available: {reason}")]
+    BackendNotAvailable { backend: String, reason: String },
+
+    #[error("Firecracker API error: {message}")]
+    FirecrackerApi {
+        message: String,
+        status: Option<u16>,
+    },
+
+    #[error("VM boot failed: {0}")]
+    VMBootFailed(String),
+
+    #[error("VM communication error: {0}")]
+    VMCommunication(String),
+
+    #[error("Asset download failed: {url}")]
+    AssetDownload { url: String },
+
     // Session errors
     #[error("Session not found: {id}")]
     SessionNotFound { id: String },

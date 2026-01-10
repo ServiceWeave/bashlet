@@ -1,3 +1,7 @@
+[workspace]
+members = [".", "guest-agent"]
+resolver = "2"
+
 [package]
 name = "bashlet"
 version = "0.1.0"
@@ -37,8 +41,24 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 directories = "5"
 chrono = "0.4"
 
+# Archive extraction (for downloading wasmer)
+flate2 = "1"
+tar = "0.4"
+
+# Firecracker support (optional)
+hyper = { version = "1", features = ["client", "http1"], optional = true }
+hyper-util = { version = "0.1", features = ["tokio", "client-legacy"], optional = true }
+http-body-util = { version = "0.1", optional = true }
+which = { version = "7", optional = true }
+
+[target.'cfg(target_os = "linux")'.dependencies]
+hyperlocal = { version = "0.9", optional = true }
+
 [features]
-default = []
+default = ["wasmer"]
+wasmer = []
+firecracker = ["hyper", "hyper-util", "http-body-util", "which"]
+all-backends = ["wasmer", "firecracker"]
 
 [dev-dependencies]
 tempfile = "3"
@@ -47,6 +67,12 @@ tempfile = "3"
 lto = true
 codegen-units = 1
 strip = true
+
+# Optimized profile for guest-agent (smaller binary)
+[profile.release-agent]
+inherits = "release"
+opt-level = "z"     # Optimize for size
+panic = "abort"     # Abort on panic (smaller binary)
 
 [[bin]]
 name = "bashlet"
