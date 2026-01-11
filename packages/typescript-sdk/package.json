@@ -66,6 +66,8 @@
     "build": "tsup",
     "dev": "tsup --watch",
     "test": "vitest",
+    "test:run": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src",
     "prepublishOnly": "npm run build"
@@ -83,6 +85,7 @@
   },
   "devDependencies": {
     "@types/node": "^22.10.5",
+    "@vitest/coverage-v8": "^2.1.9",
     "tsup": "^8.3.5",
     "typescript": "^5.7.3",
     "vitest": "^2.1.8",
