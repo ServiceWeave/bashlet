@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>TypeScript SDK - Bashlet</title>
+    <meta name="description" content="TypeScript SDK for bashlet - provide sandboxed bash execution as tools for AI agents. Supports MCP, Vercel AI SDK, OpenAI, and more.">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐚</text></svg>">
+    <link href="https://fonts.googleapis.com" rel="preconnect"/>
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "term-bg": "#000000",
+                        "term-green": "#4AF626",
+                        "term-amber": "#FFB000",
+                        "term-gray": "#666666",
+                        "term-red": "#FF3333",
+                        "term-blue": "#3b8eea",
+                        "term-dim": "#333333",
+                        "term-border": "#333333"
+                    },
+                    fontFamily: {
+                        "mono": ["JetBrains Mono", "monospace"],
+                        "sans": ["JetBrains Mono", "monospace"],
+                    },
+                },
+            },
+        }
+    </script>
+    <style type="text/tailwindcss">
+        body {
+            @apply bg-term-bg text-term-green font-mono selection:bg-term-green selection:text-black;
+        }
+        .comment { color: #666666; }
+        .keyword { color: #FF79C6; }
+        .string { color: #3b8eea; }
+        .type { color: #FFB000; }
+        .function { color: #50FA7B; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+    <!-- Header -->
+    <header class="border-b border-term-dim py-4">
+        <div class="max-w-6xl mx-auto px-4 flex items-center justify-between">
+            <a href="index.html" class="flex items-center gap-2 hover:opacity-80 transition-opacity">
+                <span class="text-term-green font-bold text-xl">&gt;_</span>
+                <span class="font-bold text-white text-xl">Bashlet</span>
+            </a>
+            <nav class="flex items-center gap-6 text-sm">
+                <a href="index.html" class="text-term-gray hover:text-white transition-colors">Home</a>
+                <a href="typescript-sdk.html" class="text-term-blue">TypeScript SDK</a>
+                <a href="python-sdk.html" class="text-term-gray hover:text-white transition-colors">Python SDK</a>
+                <a href="https://github.com/ServiceWeave/bashlet" class="text-term-gray hover:text-white transition-colors">GitHub</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="flex-grow">
+        <!-- Hero -->
+        <section class="py-16 border-b border-term-dim">
+            <div class="max-w-4xl mx-auto px-4">
+                <div class="flex items-center gap-3 mb-6">
+                    <span class="px-2 py-1 bg-term-blue/20 border border-term-blue text-term-blue text-xs uppercase">TypeScript</span>
+                    <span class="px-2 py-1 bg-term-dim border border-term-dim text-term-gray text-xs uppercase">SDK</span>
+                </div>
+                <h1 class="text-4xl font-bold text-white mb-4">@bashlet/sdk</h1>
+                <p class="text-term-gray text-lg mb-8">
+                    TypeScript SDK for bashlet - provide sandboxed bash execution as tools for AI agents.
+                </p>
+                <div class="flex gap-4">
+                    <a href="https://www.npmjs.com/package/@bashlet/sdk" class="px-4 py-2 bg-term-green text-black font-bold hover:bg-term-green/80 transition-colors">
+                        npm install @bashlet/sdk
+                    </a>
+                    <a href="https://github.com/ServiceWeave/bashlet/tree/main/packages/typescript-sdk" class="px-4 py-2 border border-term-dim text-white hover:border-term-green transition-colors">
+                        View Source
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Installation -->
+        <section class="py-16 border-b border-term-dim">
+            <div class="max-w-4xl mx-auto px-4">
+                <h2 class="text-2xl font-bold text-white mb-6 flex items-center gap-3">
+                    <span class="text-term-green">01</span> Installation
+                </h2>
+                <div class="border border-term-dim bg-black overflow-hidden">
+                    <div class="flex items-center justify-between px-4 py-2 bg-term-dim/50 border-b border-term-dim">
+                        <span class="text-xs text-term-gray uppercase">Terminal</span>
+                        <button onclick="copyCode(this)" class="text-xs text-term-gray hover:text-white transition-colors">Copy</button>
+                    </div>
+                    <pre class="p-4 text-sm overflow-x-auto"><code>npm install @bashlet/sdk</code></pre>
+                </div>
+                <p class="text-term-gray text-sm mt-4">
+                    Make sure you have <a href="index.html" class="text-term-blue hover:underline">bashlet</a> installed on your system.
+                </p>
+            </div>
+        </section>
+
+        <!-- Quick Start -->
+        <section class="py-16 border-b border-term-dim">
+            <div class="max-w-4xl mx-auto px-4">
+                <h2 class="text-2xl font-bold text-white mb-6 flex items-center gap-3">
+                    <span class="text-term-green">02</span> Quick Start
+                </h2>
+                <div class="border border-term-dim bg-black overflow-hidden">
+                    <div class="flex items-center justify-between px-4 py-2 bg-term-dim/50 border-b border-term-dim">
+                        <span class="text-xs text-term-gray uppercase">TypeScript</span>
+                        <button onclick="copyCode(this)" class="text-xs text-term-gray hover:text-white transition-colors">Copy</button>
+                    </div>
+                    <pre class="p-4 text-sm overflow-x-auto"><code><span class="keyword">import</span> { <span class="type">Bashlet</span> } <span class="keyword">from</span> <span class="string">'@bashlet/sdk'</span>;
+
+<span class="keyword">const</span> bashlet = <span class="keyword">new</span> <span class="type">Bashlet</span>({
+  mounts: [{ hostPath: <span class="string">'./src'</span>, guestPath: <span class="string">'/workspace'</span> }],
+});
+
+<span class="comment">// Execute a command</span>
+<span class="keyword">const</span> result = <span class="keyword">await</span> bashlet.<span class="function">exec</span>(<span class="string">'ls -la /workspace'</span>);
+console.<span class="function">log</span>(result.stdout);</code></pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- Framework Support -->
+        <section class="py-16 border-b border-term-dim">
+            <div class="max-w-4xl mx-auto px-4">
+                <h2 class="text-2xl font-bold text-white mb-6 flex items-center gap-3">
+                    <span class="text-term-green">03</span> AI Framework Support
+                </h2>
+                <div class="grid md:grid-cols-2 gap-6 mb-8">
+                    <div class="border border-term-dim p-4 hover:border-term-blue transition-colors">
+                        <h3 class="text-white font-bold mb-2">Vercel AI SDK</h3>
+                        <p class="text-term-gray text-xs">Native Zod schemas for type-safe tool definitions</p>
+                    </div>
+                    <div class="border border-term-dim p-4 hover:border-term-amber transition-colors">
+                        <h3 class="text-white font-bold mb-2">OpenAI Function Calling</h3>
+                        <p class="text-term-gray text-xs">JSON Schema format for OpenAI API</p>
+                    </div>
+                    <div class="border border-term-dim p-4 hover:border-term-green transition-colors">
+                        <h3 class="text-white font-bold mb-2">MCP (Model Context Protocol)</h3>
+                        <p class="text-term-gray text-xs">Full MCP server integration</p>
+                    </div>
+                    <div class="border border-term-dim p-4 hover:border-term-red transition-colors">
+                        <h3 class="text-white font-bold mb-2">Framework-Agnostic</h3>
+                        <p class="text-term-gray text-xs">Generic tools for custom implementations</p>
+                    </div>
+                </div>
+
+                <!-- Vercel AI SDK -->
+                <h3 class="text-xl font-bold text-white mb-4 mt-12">Vercel AI SDK</h3>
+                <div class="border border-term-dim bg-black overflow-hidden">
+                    <div class="flex items-center justify-between px-4 py-2 bg-term-dim/50 border-b border-term-dim">
+                        <span class="text-xs text-term-gray uppercase">TypeScript</span>
+                        <button onclick="copyCode(this)" class="text-xs text-term-gray hover:text-white transition-colors">Copy</button>
+                    </div>
+                    <pre class="p-4 text-sm overflow-x-auto"><code><span class="keyword">import</span> { <span class="function">generateText</span> } <span class="keyword">from</span> <span class="string">'ai'</span>;
+<span class="keyword">import</span> { openai } <span class="keyword">from</span> <span class="string">'@ai-sdk/openai'</span>;
+<span class="keyword">import</span> { <span class="type">Bashlet</span> } <span class="keyword">from</span> <span class="string">'@bashlet/sdk'</span>;
+
+<span class="keyword">const</span> bashlet = <span class="keyword">new</span> <span class="type">Bashlet</span>({
+  mounts: [{ hostPath: <span class="string">'./project'</span>, guestPath: <span class="string">'/workspace'</span> }],
+});
+
+<span class="keyword">const</span> result = <span class="keyword">await</span> <span class="function">generateText</span>({
+  model: <span class="function">openai</span>(<span class="string">'gpt-4-turbo'</span>),
+  tools: bashlet.<span class="function">toVercelTools</span>(),
+  prompt: <span class="string">'List files in /workspace and show package.json'</span>,
+});</code></pre>
+                </div>
+
+                <!-- OpenAI -->
+                <h3 class="text-xl font-bold text-white mb-4 mt-12">OpenAI Function Calling</h3>
+                <div class="border border-term-dim bg-black overflow-hidden">
+                    <div class="flex items-center justify-between px-4 py-2 bg-term-dim/50 border-b border-term-dim">
+                        <span class="text-xs text-term-gray uppercase">TypeScript</span>
+                        <button onclick="copyCode(this)" class="text-xs text-term-gray hover:text-white transition-colors">Copy</button>
+                    </div>
+                    <pre class="p-4 text-sm overflow-x-auto"><code><span class="keyword">import</span> <span class="type">OpenAI</span> <span class="keyword">from</span> <span class="string">'openai'</span>;
+<span class="keyword">import</span> { <span class="type">Bashlet</span>, <span class="function">createOpenAIToolHandler</span> } <span class="keyword">from</span> <span class="string">'@bashlet/sdk'</span>;
+
+<span class="keyword">const</span> openai = <span class="keyword">new</span> <span class="type">OpenAI</span>();
+<span class="keyword">const</span> bashlet = <span class="keyword">new</span> <span class="type">Bashlet</span>();
+
+<span class="keyword">const</span> tools = bashlet.<span class="function">toOpenAITools</span>();
+<span class="keyword">const</span> handleToolCall = <span class="function">createOpenAIToolHandler</span>(bashlet);
+
+<span class="keyword">const</span> response = <span class="keyword">await</span> openai.chat.completions.<span class="function">create</span>({
+  model: <span class="string">'gpt-4-turbo'</span>,
+  tools: tools.<span class="function">map</span>(t => ({ type: t.type, function: t.function })),
+  messages: [{ role: <span class="string">'user'</span>, content: <span class="string">'List files'</span> }],
+});
+
+<span class="comment">// Handle tool calls</span>
+<span class="keyword">for</span> (<span class="keyword">const</span> toolCall <span class="keyword">of</span> response.choices[0].message.tool_calls ?? []) {
+  <span class="keyword">const</span> result = <span class="keyword">await</span> <span class="function">handleToolCall</span>(
+    toolCall.function.name,
+    JSON.<span class="function">parse</span>(toolCall.function.arguments)
+  );
+}</code></pre>
+                </div>
+
+                <!-- MCP -->
+                <h3 class="text-xl font-bold text-white mb-4 mt-12">MCP Server</h3>
+                <div class="border border-term-dim bg-black overflow-hidden">
+                    <div class="flex items-center justify-between px-4 py-2 bg-term-dim/50 border-b border-term-dim">
+                        <span class="text-xs text-term-gray uppercase">TypeScript</span>
+                        <button onclick="copyCode(this)" class="text-xs text-term-gray hover:text-white transition-colors">Copy</button>
+                    </div>
+                    <pre class="p-4 text-sm overflow-x-auto"><code><span class="keyword">import</span> { <span class="type">Server</span> } <span class="keyword">from</span> <span class="string">'@modelcontextprotocol/sdk/server/index.js'</span>;
+<span class="keyword">import</span> { <span class="type">StdioServerTransport</span> } <span class="keyword">from</span> <span class="string">'@modelcontextprotocol/sdk/server/stdio.js'</span>;
+<span class="keyword">import</span> { <span class="type">Bashlet</span>, <span class="function">createMCPServer</span> } <span class="keyword">from</span> <span class="string">'@bashlet/sdk'</span>;
+
+<span class="keyword">const</span> bashlet = <span class="keyword">new</span> <span class="type">Bashlet</span>();
+<span class="keyword">const</span> { tools, handleToolCall } = <span class="function">createMCPServer</span>(bashlet);
+
+<span class="keyword">const</span> server = <span class="keyword">new</span> <span class="type">Server</span>(
+  { name: <span class="string">'bashlet-mcp'</span>, version: <span class="string">'1.0.0'</span> },
+  { capabilities: { tools: {} } }
+);
+
+server.<span class="function">setRequestHandler</span>(<span class="string">'tools/list'</span>, <span class="keyword">async</span> () => ({ tools }));
+
+server.<span class="function">setRequestHandler</span>(<span class="string">'tools/call'</span>, <span class="keyword">async</span> (request) => {
+  <span class="keyword">const</span> { name, arguments: args } = request.params;
+  <span class="keyword">return</span> <span class="function">handleToolCall</span>(name, args);
+});
+
+<span class="keyword">const</span> transport = <span class="keyword">new</span> <span class="type">StdioServerTransport</span>();
+<span class="keyword">await</span> server.<span class="function">connect</span>(transport);</code></pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- Available Tools -->
+        <section class="py-16 border-b border-term-dim">
+            <div class="max-w-4xl mx-auto px-4">
+                <h2 class="text-2xl font-bold text-white mb-6 flex items-center gap-3">
+                    <span class="text-term-green">04</span> Available Tools
+                </h2>
+                <div class="border border-term-dim bg-black overflow-hidden">
+                    <table class="w-full font-mono text-sm">
+                        <thead>
+                            <tr class="border-b border-term-dim">
+                                <th class="text-left p-4 font-bold text-term-green bg-term-dim/30">Tool</th>
+                                <th class="text-left p-4 font-bold text-term-green bg-term-dim/30">Description</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-term-dim/50">
+                            <tr>
+                                <td class="p-4 text-term-blue">bashlet_exec</td>
+                                <td class="p-4 text-term-gray">Execute shell commands in the sandbox</td>
+                            </tr>
+                            <tr>
+                                <td class="p-4 text-term-blue">bashlet_read_file</td>
+                                <td class="p-4 text-term-gray">Read file contents from the sandbox</td>
+                            </tr>
+                            <tr>
+                                <td class="p-4 text-term-blue">bashlet_write_file</td>
+                                <td class="p-4 text-term-gray">Write content to a file in the sandbox</td>
+                            </tr>
+                            <tr>
+                                <td class="p-4 text-term-blue">bashlet_list_dir</td>
+                                <td class="p-4 text-term-gray">List directory contents</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- API Reference -->
+        <section class="py-16">
+            <div class="max-w-4xl mx-auto px-4">
+                <h2 class="text-2xl font-bold text-white mb-6 flex items-center gap-3">
+                    <span class="text-term-green">05</span> API Reference
+                </h2>
+
+                <h3 class="text-xl font-bold text-white mb-4">Bashlet Class</h3>
+                <div class="border border-term-dim bg-black overflow-hidden mb-8">
+                    <div class="flex items-center justify-between px-4 py-2 bg-term-dim/50 border-b border-term-dim">
+                        <span class="text-xs text-term-gray uppercase">Constructor</span>
+                    </div>
+                    <pre class="p-4 text-sm overflow-x-auto"><code><span class="keyword">new</span> <span class="type">Bashlet</span>({
+  binaryPath?: <span class="type">string</span>,       <span class="comment">// Path to bashlet binary</span>
+  preset?: <span class="type">string</span>,           <span class="comment">// Default preset name</span>
+  mounts?: <span class="type">Mount</span>[],          <span class="comment">// Default mounts</span>
+  envVars?: <span class="type">EnvVar</span>[],        <span class="comment">// Default environment variables</span>
+  workdir?: <span class="type">string</span>,          <span class="comment">// Default working directory</span>
+  timeout?: <span class="type">number</span>,          <span class="comment">// Timeout in seconds (default: 300)</span>
+  configPath?: <span class="type">string</span>,       <span class="comment">// Path to config file</span>
+})</code></pre>
+                </div>
+
+                <h3 class="text-xl font-bold text-white mb-4">Methods</h3>
+                <div class="border border-term-dim bg-black overflow-hidden">
+                    <table class="w-full font-mono text-sm">
+                        <thead>
+                            <tr class="border-b border-term-dim">
+                                <th class="text-left p-4 font-bold text-term-green bg-term-dim/30">Method</th>
+                                <th class="text-left p-4 font-bold text-term-green bg-term-dim/30">Description</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-term-dim/50">
+                            <tr>
+                                <td class="p-4 text-term-amber">exec(command, options?)</td>
+                                <td class="p-4 text-term-gray">Execute a one-shot command</td>
+                            </tr>
+                            <tr>
+                                <td class="p-4 text-term-amber">createSession(options?)</td>
+                                <td class="p-4 text-term-gray">Create a persistent session</td>
+                            </tr>
+                            <tr>
+                                <td class="p-4 text-term-amber">runInSession(id, command)</td>
+                                <td class="p-4 text-term-gray">Run command in existing session</td>
+                            </tr>
+                            <tr>
+                                <td class="p-4 text-term-amber">terminate(sessionId)</td>
+                                <td class="p-4 text-term-gray">Terminate a session</td>
+                            </tr>
+                            <tr>
+                                <td class="p-4 text-term-amber">listSessions()</td>
+                                <td class="p-4 text-term-gray">List all active sessions</td>
+                            </tr>
+                            <tr>
+                                <td class="p-4 text-term-amber">readFile(path)</td>
+                                <td class="p-4 text-term-gray">Read file from sandbox</td>
+                            </tr>
+                            <tr>
+                                <td class="p-4 text-term-amber">writeFile(path, content)</td>
+                                <td class="p-4 text-term-gray">Write file to sandbox</td>
+                            </tr>
+                            <tr>
+                                <td class="p-4 text-term-amber">listDir(path)</td>
+                                <td class="p-4 text-term-gray">List directory contents</td>
+                            </tr>
+                            <tr>
+                                <td class="p-4 text-term-blue">toVercelTools()</td>
+                                <td class="p-4 text-term-gray">Generate Vercel AI SDK tools</td>
+                            </tr>
+                            <tr>
+                                <td class="p-4 text-term-blue">toOpenAITools()</td>
+                                <td class="p-4 text-term-gray">Generate OpenAI function calling tools</td>
+                            </tr>
+                            <tr>
+                                <td class="p-4 text-term-blue">toMCPTools()</td>
+                                <td class="p-4 text-term-gray">Generate MCP tools</td>
+                            </tr>
+                            <tr>
+                                <td class="p-4 text-term-blue">toGenericTools()</td>
+                                <td class="p-4 text-term-gray">Generate framework-agnostic tools</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-term-dim bg-black py-8 font-mono text-sm">
+        <div class="max-w-6xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-2">
+                <span class="text-term-green font-bold">&gt;_</span>
+                <span class="font-bold text-white">Bashlet</span>
+            </div>
+            <div class="flex gap-6 text-term-gray text-xs">
+                <a href="index.html" class="hover:text-white">Home</a>
+                <a href="typescript-sdk.html" class="hover:text-white">TypeScript SDK</a>
+                <a href="python-sdk.html" class="hover:text-white">Python SDK</a>
+                <a href="https://github.com/ServiceWeave/bashlet" class="hover:text-white">GitHub</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        function copyCode(button) {
+            const pre = button.closest('.border').querySelector('pre');
+            const code = pre.textContent;
+            navigator.clipboard.writeText(code).then(() => {
+                button.textContent = 'Copied!';
+                setTimeout(() => { button.textContent = 'Copy'; }, 2000);
+            });
+        }
+    </script>
+</body>
+</html>

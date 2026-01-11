@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Python SDK - Bashlet</title>
+    <meta name="description" content="Python SDK for bashlet - provide sandboxed bash execution as tools for AI agents. Supports LangChain, OpenAI, Anthropic, MCP, and more.">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐚</text></svg>">
+    <link href="https://fonts.googleapis.com" rel="preconnect"/>
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "term-bg": "#000000",
+                        "term-green": "#4AF626",
+                        "term-amber": "#FFB000",
+                        "term-gray": "#666666",
+                        "term-red": "#FF3333",
+                        "term-blue": "#3b8eea",
+                        "term-dim": "#333333",
+                        "term-border": "#333333",
+                        "term-yellow": "#F1FA8C"
+                    },
+                    fontFamily: {
+                        "mono": ["JetBrains Mono", "monospace"],
+                        "sans": ["JetBrains Mono", "monospace"],
+                    },
+                },
+            },
+        }
+    </script>
+    <style type="text/tailwindcss">
+        body {
+            @apply bg-term-bg text-term-green font-mono selection:bg-term-green selection:text-black;
+        }
+        .comment { color: #666666; }
+        .keyword { color: #FF79C6; }
+        .string { color: #3b8eea; }
+        .type { color: #FFB000; }
+        .function { color: #50FA7B; }
+        .decorator { color: #F1FA8C; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+    <!-- Header -->
+    <header class="border-b border-term-dim py-4">
+        <div class="max-w-6xl mx-auto px-4 flex items-center justify-between">
+            <a href="index.html" class="flex items-center gap-2 hover:opacity-80 transition-opacity">
+                <span class="text-term-green font-bold text-xl">&gt;_</span>
+                <span class="font-bold text-white text-xl">Bashlet</span>
+            </a>
+            <nav class="flex items-center gap-6 text-sm">
+                <a href="index.html" class="text-term-gray hover:text-white transition-colors">Home</a>
+                <a href="typescript-sdk.html" class="text-term-gray hover:text-white transition-colors">TypeScript SDK</a>
+                <a href="python-sdk.html" class="text-term-yellow">Python SDK</a>
+                <a href="https://github.com/ServiceWeave/bashlet" class="text-term-gray hover:text-white transition-colors">GitHub</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="flex-grow">
+        <!-- Hero -->
+        <section class="py-16 border-b border-term-dim">
+            <div class="max-w-4xl mx-auto px-4">
+                <div class="flex items-center gap-3 mb-6">
+                    <span class="px-2 py-1 bg-term-yellow/20 border border-term-yellow text-term-yellow text-xs uppercase">Python</span>
+                    <span class="px-2 py-1 bg-term-dim border border-term-dim text-term-gray text-xs uppercase">SDK</span>
+                </div>
+                <h1 class="text-4xl font-bold text-white mb-4">bashlet</h1>
+                <p class="text-term-gray text-lg mb-8">
+                    Python SDK for bashlet - provide sandboxed bash execution as tools for AI agents.
+                    Supports both sync and async clients.
+                </p>
+                <div class="flex gap-4">
+                    <a href="https://pypi.org/project/bashlet/" class="px-4 py-2 bg-term-yellow text-black font-bold hover:bg-term-yellow/80 transition-colors">
+                        pip install bashlet
+                    </a>
+                    <a href="https://github.com/ServiceWeave/bashlet/tree/main/packages/python-sdk" class="px-4 py-2 border border-term-dim text-white hover:border-term-yellow transition-colors">
+                        View Source
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Installation -->
+        <section class="py-16 border-b border-term-dim">
+            <div class="max-w-4xl mx-auto px-4">
+                <h2 class="text-2xl font-bold text-white mb-6 flex items-center gap-3">
+                    <span class="text-term-green">01</span> Installation
+                </h2>
+                <div class="border border-term-dim bg-black overflow-hidden mb-4">
+                    <div class="flex items-center justify-between px-4 py-2 bg-term-dim/50 border-b border-term-dim">
+                        <span class="text-xs text-term-gray uppercase">Terminal</span>
+                        <button onclick="copyCode(this)" class="text-xs text-term-gray hover:text-white transition-colors">Copy</button>
+                    </div>
+                    <pre class="p-4 text-sm overflow-x-auto"><code><span class="comment"># Core package</span>
+pip install bashlet
+
+<span class="comment"># With framework support</span>
+pip install bashlet[langchain]    <span class="comment"># LangChain</span>
+pip install bashlet[openai]       <span class="comment"># OpenAI</span>
+pip install bashlet[anthropic]    <span class="comment"># Anthropic</span>
+pip install bashlet[mcp]          <span class="comment"># MCP</span>
+pip install bashlet[all]          <span class="comment"># All frameworks</span></code></pre>
+                </div>
+                <p class="text-term-gray text-sm">
+                    Make sure you have <a href="index.html" class="text-term-blue hover:underline">bashlet</a> installed on your system.
+                </p>
+            </div>
+        </section>
+
+        <!-- Quick Start -->
+        <section class="py-16 border-b border-term-dim">
+            <div class="max-w-4xl mx-auto px-4">
+                <h2 class="text-2xl font-bold text-white mb-6 flex items-center gap-3">
+                    <span class="text-term-green">02</span> Quick Start
+                </h2>
+
+                <h3 class="text-lg font-bold text-white mb-4">Synchronous Client</h3>
+                <div class="border border-term-dim bg-black overflow-hidden mb-8">
+                    <div class="flex items-center justify-between px-4 py-2 bg-term-dim/50 border-b border-term-dim">
+                        <span class="text-xs text-term-gray uppercase">Python</span>
+                        <button onclick="copyCode(this)" class="text-xs text-term-gray hover:text-white transition-colors">Copy</button>
+                    </div>
+                    <pre class="p-4 text-sm overflow-x-auto"><code><span class="keyword">from</span> bashlet <span class="keyword">import</span> <span class="type">Bashlet</span>, <span class="type">Mount</span>
+
+bashlet = <span class="type">Bashlet</span>(
+    mounts=[<span class="type">Mount</span>(<span class="string">"./src"</span>, <span class="string">"/workspace"</span>)],
+)
+
+<span class="comment"># Execute a command</span>
+result = bashlet.<span class="function">exec</span>(<span class="string">"ls -la /workspace"</span>)
+<span class="function">print</span>(result.stdout)</code></pre>
+                </div>
+
+                <h3 class="text-lg font-bold text-white mb-4">Asynchronous Client</h3>
+                <div class="border border-term-dim bg-black overflow-hidden">
+                    <div class="flex items-center justify-between px-4 py-2 bg-term-dim/50 border-b border-term-dim">
+                        <span class="text-xs text-term-gray uppercase">Python</span>
+                        <button onclick="copyCode(this)" class="text-xs text-term-gray hover:text-white transition-colors">Copy</button>
+                    </div>
+                    <pre class="p-4 text-sm overflow-x-auto"><code><span class="keyword">import</span> asyncio
+<span class="keyword">from</span> bashlet <span class="keyword">import</span> <span class="type">AsyncBashlet</span>
+
+<span class="keyword">async def</span> <span class="function">main</span>():
+    bashlet = <span class="type">AsyncBashlet</span>()
+    result = <span class="keyword">await</span> bashlet.<span class="function">exec</span>(<span class="string">"echo hello"</span>)
+    <span class="function">print</span>(result.stdout)
+
+asyncio.<span class="function">run</span>(<span class="function">main</span>())</code></pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- Framework Support -->
+        <section class="py-16 border-b border-term-dim">
+            <div class="max-w-4xl mx-auto px-4">
+                <h2 class="text-2xl font-bold text-white mb-6 flex items-center gap-3">
+                    <span class="text-term-green">03</span> AI Framework Support
+                </h2>
+                <div class="grid md:grid-cols-2 gap-6 mb-8">
+                    <div class="border border-term-dim p-4 hover:border-term-green transition-colors">
+                        <h3 class="text-white font-bold mb-2">LangChain</h3>
+                        <p class="text-term-gray text-xs">BaseTool integration for LangChain agents</p>
+                    </div>
+                    <div class="border border-term-dim p-4 hover:border-term-amber transition-colors">
+                        <h3 class="text-white font-bold mb-2">OpenAI</h3>
+                        <p class="text-term-gray text-xs">Function calling for OpenAI API</p>
+                    </div>
+                    <div class="border border-term-dim p-4 hover:border-term-blue transition-colors">
+                        <h3 class="text-white font-bold mb-2">Anthropic</h3>
+                        <p class="text-term-gray text-xs">Tool use for Claude API</p>
+                    </div>
+                    <div class="border border-term-dim p-4 hover:border-term-red transition-colors">
+                        <h3 class="text-white font-bold mb-2">MCP</h3>
+                        <p class="text-term-gray text-xs">Model Context Protocol support</p>
+                    </div>
+                </div>
+
+                <!-- LangChain -->
+                <h3 class="text-xl font-bold text-white mb-4 mt-12">LangChain</h3>
+                <div class="border border-term-dim bg-black overflow-hidden">
+                    <div class="flex items-center justify-between px-4 py-2 bg-term-dim/50 border-b border-term-dim">
+                        <span class="text-xs text-term-gray uppercase">Python</span>
+                        <button onclick="copyCode(this)" class="text-xs text-term-gray hover:text-white transition-colors">Copy</button>
+                    </div>
+                    <pre class="p-4 text-sm overflow-x-auto"><code><span class="keyword">from</span> langchain_openai <span class="keyword">import</span> <span class="type">ChatOpenAI</span>
+<span class="keyword">from</span> bashlet <span class="keyword">import</span> <span class="type">Bashlet</span>
+
+bashlet = <span class="type">Bashlet</span>(
+    mounts=[{<span class="string">"host_path"</span>: <span class="string">"./project"</span>, <span class="string">"guest_path"</span>: <span class="string">"/workspace"</span>}],
+)
+
+<span class="comment"># Get LangChain tools</span>
+tools = bashlet.<span class="function">to_langchain_tools</span>()
+
+<span class="comment"># Bind tools to LLM</span>
+llm = <span class="type">ChatOpenAI</span>(model=<span class="string">"gpt-4-turbo"</span>)
+llm_with_tools = llm.<span class="function">bind_tools</span>(tools.<span class="function">all</span>())
+
+<span class="comment"># Use in agent</span>
+response = llm_with_tools.<span class="function">invoke</span>(<span class="string">"List files in /workspace"</span>)</code></pre>
+                </div>
+
+                <!-- OpenAI -->
+                <h3 class="text-xl font-bold text-white mb-4 mt-12">OpenAI Function Calling</h3>
+                <div class="border border-term-dim bg-black overflow-hidden">
+                    <div class="flex items-center justify-between px-4 py-2 bg-term-dim/50 border-b border-term-dim">
+                        <span class="text-xs text-term-gray uppercase">Python</span>
+                        <button onclick="copyCode(this)" class="text-xs text-term-gray hover:text-white transition-colors">Copy</button>
+                    </div>
+                    <pre class="p-4 text-sm overflow-x-auto"><code><span class="keyword">from</span> openai <span class="keyword">import</span> <span class="type">OpenAI</span>
+<span class="keyword">from</span> bashlet <span class="keyword">import</span> <span class="type">Bashlet</span>
+
+client = <span class="type">OpenAI</span>()
+bashlet = <span class="type">Bashlet</span>()
+
+<span class="comment"># Get OpenAI tools</span>
+handler = bashlet.<span class="function">to_openai_tools</span>()
+
+<span class="comment"># Create completion with tools</span>
+response = client.chat.completions.<span class="function">create</span>(
+    model=<span class="string">"gpt-4-turbo"</span>,
+    tools=handler.definitions,
+    messages=[{<span class="string">"role"</span>: <span class="string">"user"</span>, <span class="string">"content"</span>: <span class="string">"List files"</span>}],
+)
+
+<span class="comment"># Handle tool calls</span>
+<span class="keyword">for</span> tool_call <span class="keyword">in</span> response.choices[<span class="type">0</span>].message.tool_calls <span class="keyword">or</span> []:
+    result = handler.<span class="function">handle</span>(
+        tool_call.function.name,
+        tool_call.function.arguments
+    )
+    <span class="function">print</span>(result)</code></pre>
+                </div>
+
+                <!-- Anthropic -->
+                <h3 class="text-xl font-bold text-white mb-4 mt-12">Anthropic Tool Use</h3>
+                <div class="border border-term-dim bg-black overflow-hidden">
+                    <div class="flex items-center justify-between px-4 py-2 bg-term-dim/50 border-b border-term-dim">
+                        <span class="text-xs text-term-gray uppercase">Python</span>
+                        <button onclick="copyCode(this)" class="text-xs text-term-gray hover:text-white transition-colors">Copy</button>
+                    </div>
+                    <pre class="p-4 text-sm overflow-x-auto"><code><span class="keyword">from</span> anthropic <span class="keyword">import</span> <span class="type">Anthropic</span>
+<span class="keyword">from</span> bashlet <span class="keyword">import</span> <span class="type">Bashlet</span>
+
+client = <span class="type">Anthropic</span>()
+bashlet = <span class="type">Bashlet</span>()
+
+<span class="comment"># Get Anthropic tools</span>
+handler = bashlet.<span class="function">to_anthropic_tools</span>()
+
+<span class="comment"># Create message with tools</span>
+response = client.messages.<span class="function">create</span>(
+    model=<span class="string">"claude-3-opus-20240229"</span>,
+    max_tokens=<span class="type">1024</span>,
+    tools=handler.definitions,
+    messages=[{<span class="string">"role"</span>: <span class="string">"user"</span>, <span class="string">"content"</span>: <span class="string">"List files"</span>}],
+)
+
+<span class="comment"># Handle tool use</span>
+<span class="keyword">for</span> block <span class="keyword">in</span> response.content:
+    <span class="keyword">if</span> block.type == <span class="string">"tool_use"</span>:
+        result = handler.<span class="function">handle</span>(block.name, block.input)
+        <span class="function">print</span>(result)</code></pre>
+                </div>
+
+                <!-- MCP -->
+                <h3 class="text-xl font-bold text-white mb-4 mt-12">MCP Server</h3>
+                <div class="border border-term-dim bg-black overflow-hidden">
+                    <div class="flex items-center justify-between px-4 py-2 bg-term-dim/50 border-b border-term-dim">
+                        <span class="text-xs text-term-gray uppercase">Python</span>
+                        <button onclick="copyCode(this)" class="text-xs text-term-gray hover:text-white transition-colors">Copy</button>
+                    </div>
+                    <pre class="p-4 text-sm overflow-x-auto"><code><span class="keyword">from</span> mcp.server <span class="keyword">import</span> <span class="type">Server</span>
+<span class="keyword">from</span> mcp.server.stdio <span class="keyword">import</span> stdio_server
+<span class="keyword">from</span> bashlet <span class="keyword">import</span> <span class="type">Bashlet</span>
+
+bashlet = <span class="type">Bashlet</span>()
+handler = bashlet.<span class="function">to_mcp_tools</span>()
+
+server = <span class="type">Server</span>(<span class="string">"bashlet-server"</span>)
+
+<span class="decorator">@server.list_tools()</span>
+<span class="keyword">async def</span> <span class="function">list_tools</span>():
+    <span class="keyword">return</span> handler.definitions
+
+<span class="decorator">@server.call_tool()</span>
+<span class="keyword">async def</span> <span class="function">call_tool</span>(name: <span class="type">str</span>, arguments: <span class="type">dict</span>):
+    result = handler.<span class="function">handle</span>(name, arguments)
+    <span class="keyword">return</span> result.content
+
+<span class="keyword">async def</span> <span class="function">main</span>():
+    <span class="keyword">async with</span> <span class="function">stdio_server</span>() <span class="keyword">as</span> (read_stream, write_stream):
+        <span class="keyword">await</span> server.<span class="function">run</span>(read_stream, write_stream)</code></pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- Available Tools -->
+        <section class="py-16 border-b border-term-dim">
+            <div class="max-w-4xl mx-auto px-4">
+                <h2 class="text-2xl font-bold text-white mb-6 flex items-center gap-3">
+                    <span class="text-term-green">04</span> Available Tools
+                </h2>
+                <div class="border border-term-dim bg-black overflow-hidden">
+                    <table class="w-full font-mono text-sm">
+                        <thead>
+                            <tr class="border-b border-term-dim">
+                                <th class="text-left p-4 font-bold text-term-green bg-term-dim/30">Tool</th>
+                                <th class="text-left p-4 font-bold text-term-green bg-term-dim/30">Description</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-term-dim/50">
+                            <tr>
+                                <td class="p-4 text-term-blue">bashlet_exec</td>
+                                <td class="p-4 text-term-gray">Execute shell commands in the sandbox</td>
+                            </tr>
+                            <tr>
+                                <td class="p-4 text-term-blue">bashlet_read_file</td>
+                                <td class="p-4 text-term-gray">Read file contents from the sandbox</td>
+                            </tr>
+                            <tr>
+                                <td class="p-4 text-term-blue">bashlet_write_file</td>
+                                <td class="p-4 text-term-gray">Write content to a file in the sandbox</td>
+                            </tr>
+                            <tr>
+                                <td class="p-4 text-term-blue">bashlet_list_dir</td>
+                                <td class="p-4 text-term-gray">List directory contents</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- API Reference -->
+        <section class="py-16">
+            <div class="max-w-4xl mx-auto px-4">
+                <h2 class="text-2xl font-bold text-white mb-6 flex items-center gap-3">
+                    <span class="text-term-green">05</span> API Reference
+                </h2>
+
+                <h3 class="text-xl font-bold text-white mb-4">Bashlet / AsyncBashlet Class</h3>
+                <div class="border border-term-dim bg-black overflow-hidden mb-8">
+                    <div class="flex items-center justify-between px-4 py-2 bg-term-dim/50 border-b border-term-dim">
+                        <span class="text-xs text-term-gray uppercase">Constructor</span>
+                    </div>
+                    <pre class="p-4 text-sm overflow-x-auto"><code><span class="type">Bashlet</span>(
+    binary_path: <span class="type">str</span> = <span class="string">"bashlet"</span>,   <span class="comment"># Path to bashlet binary</span>
+    preset: <span class="type">str</span> | <span class="type">None</span> = <span class="type">None</span>,       <span class="comment"># Default preset name</span>
+    mounts: <span class="type">list</span> | <span class="type">None</span> = <span class="type">None</span>,      <span class="comment"># Default mounts</span>
+    env_vars: <span class="type">list</span> | <span class="type">None</span> = <span class="type">None</span>,    <span class="comment"># Environment variables</span>
+    workdir: <span class="type">str</span> | <span class="type">None</span> = <span class="type">None</span>,      <span class="comment"># Working directory</span>
+    timeout: <span class="type">int</span> = <span class="type">300</span>,               <span class="comment"># Timeout in seconds</span>
+    config_path: <span class="type">str</span> | <span class="type">None</span> = <span class="type">None</span>,  <span class="comment"># Config file path</span>
+)</code></pre>
+                </div>
+
+                <h3 class="text-xl font-bold text-white mb-4">Methods</h3>
+                <div class="border border-term-dim bg-black overflow-hidden">
+                    <table class="w-full font-mono text-sm">
+                        <thead>
+                            <tr class="border-b border-term-dim">
+                                <th class="text-left p-4 font-bold text-term-green bg-term-dim/30">Method</th>
+                                <th class="text-left p-4 font-bold text-term-green bg-term-dim/30">Description</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-term-dim/50">
+                            <tr>
+                                <td class="p-4 text-term-amber">exec(command, **options)</td>
+                                <td class="p-4 text-term-gray">Execute a one-shot command</td>
+                            </tr>
+                            <tr>
+                                <td class="p-4 text-term-amber">create_session(**options)</td>
+                                <td class="p-4 text-term-gray">Create a persistent session</td>
+                            </tr>
+                            <tr>
+                                <td class="p-4 text-term-amber">run_in_session(id, command)</td>
+                                <td class="p-4 text-term-gray">Run command in existing session</td>
+                            </tr>
+                            <tr>
+                                <td class="p-4 text-term-amber">terminate(session_id)</td>
+                                <td class="p-4 text-term-gray">Terminate a session</td>
+                            </tr>
+                            <tr>
+                                <td class="p-4 text-term-amber">list_sessions()</td>
+                                <td class="p-4 text-term-gray">List all active sessions</td>
+                            </tr>
+                            <tr>
+                                <td class="p-4 text-term-amber">read_file(path)</td>
+                                <td class="p-4 text-term-gray">Read file from sandbox</td>
+                            </tr>
+                            <tr>
+                                <td class="p-4 text-term-amber">write_file(path, content)</td>
+                                <td class="p-4 text-term-gray">Write file to sandbox</td>
+                            </tr>
+                            <tr>
+                                <td class="p-4 text-term-amber">list_dir(path)</td>
+                                <td class="p-4 text-term-gray">List directory contents</td>
+                            </tr>
+                            <tr>
+                                <td class="p-4 text-term-blue">to_langchain_tools()</td>
+                                <td class="p-4 text-term-gray">Generate LangChain tools</td>
+                            </tr>
+                            <tr>
+                                <td class="p-4 text-term-blue">to_openai_tools()</td>
+                                <td class="p-4 text-term-gray">Generate OpenAI tools</td>
+                            </tr>
+                            <tr>
+                                <td class="p-4 text-term-blue">to_anthropic_tools()</td>
+                                <td class="p-4 text-term-gray">Generate Anthropic tools</td>
+                            </tr>
+                            <tr>
+                                <td class="p-4 text-term-blue">to_mcp_tools()</td>
+                                <td class="p-4 text-term-gray">Generate MCP tools</td>
+                            </tr>
+                            <tr>
+                                <td class="p-4 text-term-blue">to_generic_tools()</td>
+                                <td class="p-4 text-term-gray">Generate framework-agnostic tools</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-term-dim bg-black py-8 font-mono text-sm">
+        <div class="max-w-6xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-2">
+                <span class="text-term-green font-bold">&gt;_</span>
+                <span class="font-bold text-white">Bashlet</span>
+            </div>
+            <div class="flex gap-6 text-term-gray text-xs">
+                <a href="index.html" class="hover:text-white">Home</a>
+                <a href="typescript-sdk.html" class="hover:text-white">TypeScript SDK</a>
+                <a href="python-sdk.html" class="hover:text-white">Python SDK</a>
+                <a href="https://github.com/ServiceWeave/bashlet" class="hover:text-white">GitHub</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        function copyCode(button) {
+            const pre = button.closest('.border').querySelector('pre');
+            const code = pre.textContent;
+            navigator.clipboard.writeText(code).then(() => {
+                button.textContent = 'Copied!';
+                setTimeout(() => { button.textContent = 'Copy'; }, 2000);
+            });
+        }
+    </script>
+</body>
+</html>

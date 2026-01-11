@@ -573,6 +573,63 @@ bashlet exec <span class="flag">--preset</span> kubectl <span class="string">"ku
                 </div>
             </div>
         </section>
+
+        <!-- SDKs Section -->
+        <section id="sdks" class="py-24 bg-black border-t border-term-dim">
+            <div class="max-w-4xl mx-auto px-4">
+                <div class="text-center mb-16">
+                    <div class="inline-block border-b border-term-green pb-1 mb-6">
+                        <h2 class="font-mono text-3xl font-bold uppercase text-white tracking-widest">
+                            <span class="text-term-green">./</span>SDKs
+                        </h2>
+                    </div>
+                    <p class="text-term-gray text-sm max-w-2xl mx-auto font-mono">
+                        # Integrate bashlet with your AI agents using our SDKs.<br/>
+                        # Support for multiple AI frameworks included.
+                    </p>
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-8">
+                    <a href="typescript-sdk.html" class="border border-term-dim p-8 hover:border-term-blue transition-colors group relative bg-black block">
+                        <div class="absolute top-0 right-0 p-2 text-term-dim group-hover:text-term-blue">
+                            ┌──┐
+                        </div>
+                        <div class="text-term-blue mb-4 group-hover:animate-pulse">
+                            <span class="material-symbols-outlined text-4xl">code</span>
+                        </div>
+                        <h3 class="text-xl font-bold mb-3 text-white uppercase tracking-wider">TypeScript SDK</h3>
+                        <p class="text-term-gray text-xs leading-relaxed font-mono mb-4">
+                            &gt; @bashlet/sdk<br/>
+                            &gt; MCP, Vercel AI SDK, OpenAI<br/>
+                            &gt; Framework-agnostic tools
+                        </p>
+                        <div class="font-mono text-xs text-term-blue">
+                            npm install @bashlet/sdk &rarr;
+                        </div>
+                        <div class="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-term-blue to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    </a>
+
+                    <a href="python-sdk.html" class="border border-term-dim p-8 hover:border-term-amber transition-colors group relative bg-black block">
+                        <div class="absolute top-0 right-0 p-2 text-term-dim group-hover:text-term-amber">
+                            ┌──┐
+                        </div>
+                        <div class="text-term-amber mb-4 group-hover:animate-pulse">
+                            <span class="material-symbols-outlined text-4xl">terminal</span>
+                        </div>
+                        <h3 class="text-xl font-bold mb-3 text-white uppercase tracking-wider">Python SDK</h3>
+                        <p class="text-term-gray text-xs leading-relaxed font-mono mb-4">
+                            &gt; bashlet<br/>
+                            &gt; LangChain, OpenAI, Anthropic, MCP<br/>
+                            &gt; Sync &amp; Async clients
+                        </p>
+                        <div class="font-mono text-xs text-term-amber">
+                            pip install bashlet &rarr;
+                        </div>
+                        <div class="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-term-amber to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    </a>
+                </div>
+            </div>
+        </section>
     </main>
 
     <!-- Footer -->
@@ -586,6 +643,12 @@ bashlet exec <span class="flag">--preset</span> kubectl <span class="string">"ku
                 root@bashlet: /license --mit
             </div>
             <div class="flex gap-6">
+                <a class="text-term-gray hover:text-term-blue transition-colors flex items-center gap-1" href="typescript-sdk.html">
+                    <span>[ TypeScript SDK ]</span>
+                </a>
+                <a class="text-term-gray hover:text-term-amber transition-colors flex items-center gap-1" href="python-sdk.html">
+                    <span>[ Python SDK ]</span>
+                </a>
                 <a class="text-term-gray hover:text-white transition-colors flex items-center gap-1" href="https://github.com/ServiceWeave/bashlet">
                     <span>[ GitHub ]</span>
                 </a>
