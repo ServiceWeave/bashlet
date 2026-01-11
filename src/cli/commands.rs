@@ -3,15 +3,13 @@ use std::time::{Duration, UNIX_EPOCH};
 use chrono::{DateTime, Local, Utc};
 use tracing::info;
 
-use crate::agent::Agent;
 use crate::cli::args::{
-    AgentArgs, ConfigAction, ConfigArgs, CreateArgs, ExecArgs, InitArgs, ListArgs, OutputFormat,
+    ConfigAction, ConfigArgs, CreateArgs, ExecArgs, InitArgs, ListArgs, OutputFormat,
     SessionRunArgs, TerminateArgs,
 };
 use crate::config::loader::get_config_path;
 use crate::config::types::BashletConfig;
 use crate::error::Result;
-use crate::providers::registry::create_provider;
 use crate::sandbox::{create_backend, CommandResult, RuntimeConfig};
 use crate::session::{parse_ttl, Session, SessionManager};
 
@@ -250,58 +248,6 @@ pub async fn list(args: ListArgs, format: OutputFormat) -> Result<()> {
         }
     }
 
-    Ok(())
-}
-
-// ============================================================================
-// Agent Command (AI-orchestrated mode)
-// ============================================================================
-
-pub async fn agent(args: AgentArgs, config: BashletConfig) -> Result<()> {
-    info!(task = %args.task, provider = %args.provider, "Starting agent session");
-
-    // Determine the model to use
-    let model = args.model.or_else(|| {
-        config
-            .providers
-            .get(&args.provider)
-            .map(|p| p.default_model.clone())
-    });
-
-    // Initialize AI provider
-    let provider = create_provider(&args.provider, model.as_deref(), &config)?;
-
-    // Build sandbox configuration
-    let mut sandbox_config = config.sandbox.clone();
-
-    // Override backend if specified
-    if let Some(backend) = args.backend {
-        sandbox_config.backend = backend;
-    }
-
-    // Handle legacy --wasm flag
-    if let Some(wasm_path) = args.wasm {
-        sandbox_config.wasmer.wasm_binary = Some(wasm_path);
-    }
-
-    let workdir = args.workdir.clone();
-    let runtime = RuntimeConfig {
-        mounts: args.mounts,
-        env_vars: args.env_vars,
-        workdir: args.workdir,
-        memory_limit_mb: sandbox_config.memory_limit_mb,
-        timeout_seconds: sandbox_config.timeout_seconds,
-    };
-
-    // Create sandbox backend
-    let backend = create_backend(&sandbox_config, runtime).await?;
-
-    // Create and run agent
-    let agent = Agent::new(provider, backend, workdir, args.max_iterations);
-
-    let result = agent.run(&args.task).await?;
-
-    println!("{}", result);
     Ok(())
 }
 

@@ -3,8 +3,8 @@
 <head>
     <meta charset="utf-8"/>
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-    <title>Bashlet - Sandboxed Bash for AI Agents</title>
-    <meta name="description" content="Give your AI agents a secure sandbox to execute shell commands. Multiple isolation backends with directory mounting and session management.">
+    <title>Bashlet - Sandboxed Bash Execution</title>
+    <meta name="description" content="Secure sandbox to execute shell commands. Multiple isolation backends with directory mounting and session management.">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐚</text></svg>">
     <link href="https://fonts.googleapis.com" rel="preconnect"/>
     <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
@@ -151,15 +151,15 @@
 
                         <h1 class="font-mono text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-none text-white">
                             Sandboxed <br/>
-                            <span class="text-term-green">Bash</span> for <br/>
-                            <span class="bg-term-green text-black px-1">AI Agents</span>
+                            <span class="text-term-green">Bash</span> <br/>
+                            <span class="bg-term-green text-black px-1">Execution</span>
                         </h1>
 
                         <div class="border-l-2 border-term-dim pl-4 py-2">
                             <p class="text-lg text-term-gray leading-relaxed max-w-lg">
-                                // Give your AI agents a secure sandbox.<br/>
-                                // Execute shell commands safely.<br/>
-                                // Multiple isolation backends available.
+                                // Secure sandbox for shell commands.<br/>
+                                // Execute safely in isolation.<br/>
+                                // Multiple backends available.
                             </p>
                         </div>
 
@@ -247,16 +247,16 @@
                 <div class="text-center mb-16">
                     <div class="inline-block border-b border-term-green pb-1 mb-6">
                         <h2 class="font-mono text-3xl font-bold uppercase text-white tracking-widest">
-                            <span class="text-term-green">./</span>Why_Your_Agents_Need_A_Shell
+                            <span class="text-term-green">./</span>Why_You_Need_A_Sandbox
                         </h2>
                     </div>
                     <p class="text-term-gray max-w-2xl mx-auto font-mono text-sm">
-                        # LLMs excel at reasoning, but they need tools.<br/>
-                        # Give agents the same capabilities as human developers.
+                        # Execute shell commands safely.<br/>
+                        # Isolate untrusted code from your system.
                     </p>
                     <div class="mt-8 bg-term-dim/30 border border-term-dim p-4 inline-block max-w-xl">
                         <p class="font-mono text-xs text-term-amber">
-                            echo "LLMs have seen grep, cat, find, and awk billions of times." &gt;&gt; manifesto.txt
+                            echo "Run any shell command in complete isolation." &gt;&gt; manifesto.txt
                         </p>
                     </div>
                 </div>
@@ -271,9 +271,9 @@
                         </div>
                         <h3 class="text-lg font-bold mb-3 text-white uppercase tracking-wider">01_Filesystem</h3>
                         <p class="text-term-gray text-xs leading-relaxed font-mono">
-                            &gt; Agents read local project files<br/>
-                            &gt; Traverse directories<br/>
-                            &gt; Analyze structure recursively
+                            &gt; Mount local directories<br/>
+                            &gt; Control access paths<br/>
+                            &gt; Read-only or read-write
                         </p>
                         <div class="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-term-blue to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
                     </div>
@@ -285,11 +285,11 @@
                         <div class="text-term-green mb-4 group-hover:animate-pulse">
                             <span class="material-symbols-outlined text-4xl">check_circle</span>
                         </div>
-                        <h3 class="text-lg font-bold mb-3 text-white uppercase tracking-wider">02_Validation</h3>
+                        <h3 class="text-lg font-bold mb-3 text-white uppercase tracking-wider">02_Isolation</h3>
                         <p class="text-term-gray text-xs leading-relaxed font-mono">
-                            &gt; Run unit tests<br/>
-                            &gt; Execute linters<br/>
-                            &gt; Compile code to verify
+                            &gt; Run untrusted scripts<br/>
+                            &gt; Test in isolation<br/>
+                            &gt; No host system access
                         </p>
                         <div class="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-term-green to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
                     </div>
@@ -305,7 +305,7 @@
                         <p class="text-term-gray text-xs leading-relaxed font-mono">
                             &gt; Access standard CLI tools<br/>
                             &gt; <span class="text-white">git</span>, <span class="text-white">npm</span>, <span class="text-white">pip</span><br/>
-                            &gt; Full developer capabilities
+                            &gt; Full shell capabilities
                         </p>
                         <div class="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-term-amber to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
                     </div>
@@ -422,7 +422,7 @@
                         </h2>
                     </div>
                     <p class="text-term-gray text-sm max-w-2xl mx-auto font-mono">
-                        # Simple CLI for one-shot commands, persistent sessions, and AI agent integration.
+                        # Simple CLI for one-shot commands and persistent sessions.
                     </p>
                 </div>
 
@@ -477,25 +477,6 @@ bashlet terminate my-session</code></pre>
                         </div>
                     </div>
 
-                    <!-- AI Agent Mode -->
-                    <div>
-                        <h3 class="font-mono text-xl font-bold mb-4 flex items-center gap-3 text-white uppercase">
-                            <span class="material-symbols-outlined text-term-green">smart_toy</span>
-                            03_AI_Agent_Mode
-                        </h3>
-                        <p class="text-term-gray mb-4 text-sm font-mono"># Run an AI agent that executes commands in the sandbox.</p>
-                        <div class="border border-term-dim bg-black overflow-hidden">
-                            <div class="flex items-center justify-between px-4 py-2 bg-term-dim/50 border-b border-term-dim">
-                                <span class="text-xs text-term-gray uppercase tracking-wider">Shell</span>
-                                <button onclick="copyCode(this)" class="text-xs text-term-gray hover:text-white transition-colors">Copy</button>
-                            </div>
-                            <pre class="p-4 text-sm overflow-x-auto"><code><span class="comment"># Set API key</span>
-export ANTHROPIC_API_KEY=<span class="string">"your-api-key"</span>
-
-<span class="comment"># Run agent with a task</span>
-bashlet agent <span class="string">"analyze the code and find potential bugs"</span> <span class="flag">--mount</span> ./src:/workspace</code></pre>
-                        </div>
-                    </div>
                 </div>
             </div>
         </section>
@@ -539,10 +520,6 @@ bashlet agent <span class="string">"analyze the code and find potential bugs"</s
                             <tr class="hover:bg-term-dim/20 transition-colors">
                                 <td class="p-4 text-term-blue whitespace-nowrap">bashlet terminate SESSION</td>
                                 <td class="p-4 text-term-gray">Terminate a session</td>
-                            </tr>
-                            <tr class="hover:bg-term-dim/20 transition-colors">
-                                <td class="p-4 text-term-blue whitespace-nowrap">bashlet agent "task"</td>
-                                <td class="p-4 text-term-gray">Run AI agent with sandbox access</td>
                             </tr>
                         </tbody>
                     </table>

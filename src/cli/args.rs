@@ -47,9 +47,6 @@ pub enum Commands {
     /// List all active sessions
     List(ListArgs),
 
-    /// Run an agent session with a task (AI-orchestrated)
-    Agent(AgentArgs),
-
     /// Initialize a new bashlet configuration
     Init(InitArgs),
 
@@ -134,48 +131,6 @@ pub struct ListArgs {
     /// Show all sessions including expired (for debugging)
     #[clap(long)]
     pub all: bool,
-}
-
-// ============================================================================
-// Agent Command (legacy AI-orchestrated mode)
-// ============================================================================
-
-#[derive(Args, Debug)]
-pub struct AgentArgs {
-    /// The task or prompt for the agent
-    pub task: String,
-
-    /// AI provider to use
-    #[clap(short, long, default_value = "anthropic")]
-    pub provider: String,
-
-    /// Model to use (provider-specific)
-    #[clap(long)]
-    pub model: Option<String>,
-
-    /// Sandbox backend to use (wasmer, firecracker, auto)
-    #[clap(long, short = 'b', value_enum)]
-    pub backend: Option<BackendType>,
-
-    /// WASM binary to use as sandbox environment (deprecated, use --backend wasmer)
-    #[clap(long)]
-    pub wasm: Option<PathBuf>,
-
-    /// Mount host directories into sandbox (host_path:guest_path[:ro])
-    #[clap(long = "mount", short = 'm', value_parser = parse_mount)]
-    pub mounts: Vec<Mount>,
-
-    /// Environment variables to set in sandbox (KEY=VALUE)
-    #[clap(long = "env", short = 'e', value_parser = parse_env_var)]
-    pub env_vars: Vec<(String, String)>,
-
-    /// Maximum iterations for agent loop
-    #[clap(long, default_value = "50")]
-    pub max_iterations: u32,
-
-    /// Working directory inside sandbox
-    #[clap(long, default_value = "/workspace")]
-    pub workdir: String,
 }
 
 // ============================================================================

@@ -33,9 +33,6 @@ async fn main() -> Result<()> {
         Commands::List(args) => {
             commands::list(args, format).await?;
         }
-        Commands::Agent(args) => {
-            commands::agent(args, config).await?;
-        }
         Commands::Init(args) => {
             commands::init(args).await?;
         }

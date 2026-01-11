@@ -111,22 +111,6 @@ def456       temp-session     2024-01-10 15:25     1h         ./data:/data
 bashlet terminate my-session
 ```
 
-### AI Agent Mode
-
-Run an AI agent that executes commands in the sandbox:
-
-```bash
-bashlet agent "analyze the code and find potential bugs" --mount ./src:/workspace
-```
-
-Requires an API key:
-
-```bash
-export ANTHROPIC_API_KEY="your-api-key"
-# or
-export OPENAI_API_KEY="your-api-key"
-```
-
 ## Command Reference
 
 | Command | Description |
@@ -136,7 +120,6 @@ export OPENAI_API_KEY="your-api-key"
 | `bashlet run SESSION "command"` | Run command in an existing session |
 | `bashlet list` | List all active sessions |
 | `bashlet terminate SESSION` | Terminate a session |
-| `bashlet agent "task"` | Run AI agent with sandbox access |
 
 ### Exec Options
 
@@ -273,12 +256,6 @@ Configuration is stored in `~/.config/bashlet/config.toml` (or platform equivale
 Example configuration:
 
 ```toml
-[agent]
-default_provider = "anthropic"
-max_iterations = 50
-temperature = 0.0
-max_tokens = 4096
-
 [sandbox]
 backend = "auto"  # auto, wasmer, or firecracker
 default_workdir = "/workspace"
@@ -288,14 +265,6 @@ timeout_seconds = 300
 [sandbox.firecracker]
 vcpu_count = 1
 enable_networking = false
-
-[providers.anthropic]
-api_key_env = "ANTHROPIC_API_KEY"
-default_model = "claude-sonnet-4-20250514"
-
-[providers.openai]
-api_key_env = "OPENAI_API_KEY"
-default_model = "gpt-4o"
 ```
 
 ## License

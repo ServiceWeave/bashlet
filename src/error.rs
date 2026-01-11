@@ -73,16 +73,6 @@ pub enum BashletError {
     #[error("Session name already exists: {name}")]
     SessionNameExists { name: String },
 
-    // Agent errors
-    #[error("Agent loop exceeded maximum iterations ({max})")]
-    MaxIterationsExceeded { max: u32 },
-
-    #[error("Tool '{tool}' not found")]
-    ToolNotFound { tool: String },
-
-    #[error("Invalid tool input for '{tool}': {reason}")]
-    InvalidToolInput { tool: String, reason: String },
-
     // IO errors
     #[error("IO error: {0}")]
     Io(#[from] std::io::Error),

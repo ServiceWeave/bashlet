@@ -1,5 +1,5 @@
 [workspace]
-members = [".", "guest-agent"]
+members = ["."]
 resolver = "2"
 
 [package]
@@ -67,12 +67,6 @@ tempfile = "3"
 lto = true
 codegen-units = 1
 strip = true
-
-# Optimized profile for guest-agent (smaller binary)
-[profile.release-agent]
-inherits = "release"
-opt-level = "z"     # Optimize for size
-panic = "abort"     # Abort on panic (smaller binary)
 
 [[bin]]
 name = "bashlet"
