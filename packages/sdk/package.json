@@ -1,0 +1,113 @@
+{
+  "name": "@bashlet/sdk",
+  "version": "0.1.0",
+  "description": "TypeScript SDK for bashlet sandboxed bash execution - provide bashlet as a tool for AI agents",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    },
+    "./tools/mcp": {
+      "import": {
+        "types": "./dist/tools/mcp.d.ts",
+        "default": "./dist/tools/mcp.js"
+      },
+      "require": {
+        "types": "./dist/tools/mcp.d.cts",
+        "default": "./dist/tools/mcp.cjs"
+      }
+    },
+    "./tools/vercel": {
+      "import": {
+        "types": "./dist/tools/vercel.d.ts",
+        "default": "./dist/tools/vercel.js"
+      },
+      "require": {
+        "types": "./dist/tools/vercel.d.cts",
+        "default": "./dist/tools/vercel.cjs"
+      }
+    },
+    "./tools/openai": {
+      "import": {
+        "types": "./dist/tools/openai.d.ts",
+        "default": "./dist/tools/openai.js"
+      },
+      "require": {
+        "types": "./dist/tools/openai.d.cts",
+        "default": "./dist/tools/openai.cjs"
+      }
+    },
+    "./schemas": {
+      "import": {
+        "types": "./dist/schemas/index.d.ts",
+        "default": "./dist/schemas/index.js"
+      },
+      "require": {
+        "types": "./dist/schemas/index.d.cts",
+        "default": "./dist/schemas/index.cjs"
+      }
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src",
+    "prepublishOnly": "npm run build"
+  },
+  "dependencies": {
+    "execa": "^9.5.2"
+  },
+  "peerDependencies": {
+    "zod": ">=3.0.0"
+  },
+  "peerDependenciesMeta": {
+    "zod": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.5",
+    "tsup": "^8.3.5",
+    "typescript": "^5.7.3",
+    "vitest": "^2.1.8",
+    "zod": "^3.24.1"
+  },
+  "keywords": [
+    "bashlet",
+    "sandbox",
+    "bash",
+    "shell",
+    "ai-agent",
+    "mcp",
+    "vercel-ai",
+    "openai",
+    "function-calling",
+    "tools",
+    "ai-tools"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/anthropics/bashlet.git",
+    "directory": "packages/sdk"
+  },
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
