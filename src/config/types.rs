@@ -2,7 +2,7 @@ use clap::ValueEnum;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 #[serde(default)]
 pub struct BashletConfig {
     pub sandbox: SandboxConfig,
@@ -19,14 +19,6 @@ pub enum BackendType {
     /// Automatically select the best available backend
     #[default]
     Auto,
-}
-
-impl Default for BashletConfig {
-    fn default() -> Self {
-        Self {
-            sandbox: SandboxConfig::default(),
-        }
-    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
