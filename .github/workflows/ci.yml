@@ -104,8 +104,7 @@ jobs:
         run: npm run build
 
       - name: Run tests
-        run: npm test
-        continue-on-error: true
+        run: npm run test:run
 
   # ============================================================================
   # Python SDK
@@ -146,6 +145,5 @@ jobs:
         run: mypy src/
         continue-on-error: true
 
-      - name: Run tests
-        run: pytest
-        continue-on-error: true
+      - name: Run tests with coverage
+        run: pytest --cov=src/bashlet --cov-report=term-missing

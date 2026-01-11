@@ -23,3 +23,14 @@ Thumbs.db
 node_modules/
 dist/
 coverage/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+*.egg
+.coverage
+.pytest_cache/
+htmlcov/
