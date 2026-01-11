@@ -99,7 +99,7 @@ describe("generateVercelTools", () => {
       expect(tools.bashlet_exec.parameters).toBeDefined();
       // Zod schema should have _def property
       expect(
-        (tools.bashlet_exec.parameters as Record<string, unknown>)._def
+        (tools.bashlet_exec.parameters as unknown as Record<string, unknown>)._def
       ).toBeDefined();
     });
   });

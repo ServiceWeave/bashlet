@@ -161,7 +161,7 @@ describe("getOpenAIToolDefinitions", () => {
       expect(tool.function.description).toBeDefined();
       expect(tool.function.parameters).toBeDefined();
       // Should not have handler
-      expect((tool as Record<string, unknown>).handler).toBeUndefined();
+      expect((tool as unknown as Record<string, unknown>).handler).toBeUndefined();
     }
   });
 
