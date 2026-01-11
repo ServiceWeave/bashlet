@@ -21,8 +21,8 @@ use crate::session::{parse_ttl, Session, SessionManager};
 /// Expand tilde (~) in a path string to the user's home directory.
 fn expand_tilde(path: &str) -> PathBuf {
     if let Ok(home) = std::env::var("HOME") {
-        if path.starts_with("~/") {
-            return PathBuf::from(home).join(&path[2..]);
+        if let Some(stripped) = path.strip_prefix("~/") {
+            return PathBuf::from(home).join(stripped);
         } else if path == "~" {
             return PathBuf::from(home);
         }
@@ -63,7 +63,7 @@ fn apply_preset(
 
     // Merge env vars (preset first, CLI args can override)
     let mut merged_env = preset.env_vars.clone();
-    merged_env.extend(env_vars.drain(..));
+    merged_env.append(env_vars);
     *env_vars = merged_env;
 
     // Apply workdir if not overridden by CLI (check if it's the default value)
