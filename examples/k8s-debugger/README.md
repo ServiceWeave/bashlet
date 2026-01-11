@@ -4,7 +4,7 @@ An AI-powered Kubernetes debugging chatbot built with:
 
 - **Bashlet** - Sandboxed bash execution for safe kubectl access
 - **Vercel AI SDK** - Streaming chat with tool calling
-- **Claude** - Anthropic's AI model for intelligent debugging
+- **GPT-4o** - OpenAI's AI model for intelligent debugging
 - **Next.js 15** - React framework with App Router
 
 ## How It Works
@@ -23,7 +23,7 @@ All commands run in an isolated sandbox with read-only access to your kubeconfig
 - Node.js 18+
 - [Bashlet](https://github.com/anthropics/bashlet) installed and in PATH
 - kubectl configured with cluster access (`~/.kube/config`)
-- Anthropic API key
+- OpenAI API key
 
 ## Setup
 
@@ -34,10 +34,10 @@ cd examples/k8s-debugger
 npm install
 ```
 
-2. Set your Anthropic API key:
+2. Set your OpenAI API key:
 
 ```bash
-export ANTHROPIC_API_KEY=sk-ant-...
+export OPENAI_API_KEY=sk-...
 ```
 
 3. Start the development server:
@@ -70,7 +70,7 @@ npm run dev
 │                  API Route (/api/chat)                   │
 │                                                          │
 │  ┌─────────────┐    ┌────────────┐    ┌──────────────┐  │
-│  │ Vercel AI   │───▶│   Claude   │───▶│   Bashlet    │  │
+│  │ Vercel AI   │───▶│   GPT-4o   │───▶│   Bashlet    │  │
 │  │    SDK      │◀───│  (Tools)   │◀───│   (kubectl)  │  │
 │  └─────────────┘    └────────────┘    └──────────────┘  │
 └─────────────────────────────────────────────────────────┘
@@ -110,7 +110,7 @@ const bashlet = new Bashlet({
 
 // Use with Vercel AI SDK
 const result = streamText({
-  model: anthropic("claude-sonnet-4-20250514"),
+  model: openai("gpt-4o"),
   tools: {
     kubectl: tool({
       description: "Execute kubectl commands",

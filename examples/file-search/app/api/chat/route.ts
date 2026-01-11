@@ -1,4 +1,4 @@
-import { anthropic } from "@ai-sdk/anthropic";
+import { openai } from "@ai-sdk/openai";
 import { streamText, tool } from "ai";
 import { z } from "zod";
 import { createFileSearchBashlet } from "@/lib/bashlet";
@@ -10,31 +10,28 @@ const bashlet = createFileSearchBashlet();
 const SYSTEM_PROMPT = `You are a helpful file search and retrieval assistant. You have access to a directory of files through a secure sandboxed environment.
 
 Your capabilities:
-- Search for files by name patterns using find and glob
-- Search file contents using grep and ripgrep (rg)
+- List directory contents and browse file structure
 - Read file contents to answer questions
-- List directory structures
 - Analyze code, documents, and data files
 - Extract and summarize information from files
 
 Search approach:
 1. First understand what the user is looking for
-2. Use appropriate search commands to locate relevant files
+2. List directories to explore file structure
 3. Read file contents when needed for detailed information
 4. Provide clear, concise answers with relevant excerpts
 5. Cite file paths when referencing specific content
 
 Available tools in the sandbox:
-- find: Search for files by name
-- grep/rg: Search file contents
+- ls: List directories (with -R for recursive, -la for details)
 - cat/head/tail: Read file contents
-- ls: List directories
 - wc: Count lines/words
-- file: Detect file types
-- jq: Parse JSON files
-- Standard Unix utilities
+- stat: Get file information
+- Standard coreutils (cp, mv, echo, etc.)
 
-The files are mounted at /data. Always search within /data.
+Note: This is a WASM sandbox with limited commands. Commands like find, grep, and rg are NOT available.
+
+The files are mounted at /data. Always work within /data.
 
 Be thorough but concise. Show relevant file paths and excerpts when answering questions.`;
 
@@ -42,89 +39,36 @@ export async function POST(req: Request) {
   const { messages } = await req.json();
 
   const result = streamText({
-    model: anthropic("claude-sonnet-4-20250514"),
+    model: openai("gpt-4o"),
     system: SYSTEM_PROMPT,
     messages,
     maxSteps: 15,
     tools: {
-      // Search for files by name pattern
+      // List files matching a pattern
       find_files: tool({
         description:
-          "Search for files by name pattern. Uses 'find' command with glob patterns. " +
-          "Examples: '*.ts' finds TypeScript files, '*test*' finds files with 'test' in name.",
+          "List files in a directory, optionally matching a shell glob pattern. " +
+          "Uses 'ls' command. Examples: '*.ts' lists TypeScript files.",
         parameters: z.object({
           pattern: z
             .string()
-            .describe("File name pattern to search for (e.g., '*.json', '*config*')"),
+            .optional()
+            .describe("File name pattern to match (e.g., '*.json', '*config*')"),
           path: z
             .string()
             .optional()
             .default("/data")
-            .describe("Directory to search in (default: /data)"),
-          type: z
-            .enum(["f", "d", "l"])
-            .optional()
-            .describe("Type filter: 'f' for files, 'd' for directories, 'l' for links"),
-          maxDepth: z
-            .number()
-            .optional()
-            .describe("Maximum directory depth to search"),
+            .describe("Directory to list (default: /data)"),
         }),
-        execute: async ({ pattern, path, type, maxDepth }) => {
-          let cmd = `find ${path || "/data"}`;
-          if (maxDepth) cmd += ` -maxdepth ${maxDepth}`;
-          if (type) cmd += ` -type ${type}`;
-          cmd += ` -name '${pattern}' 2>/dev/null | head -50`;
+        execute: async ({ pattern, path }) => {
+          const targetPath = path || "/data";
+          const cmd = pattern
+            ? `ls -la ${targetPath}/${pattern} 2>/dev/null || echo 'No matches found'`
+            : `ls -la ${targetPath} 2>/dev/null`;
 
           const result = await bashlet.exec(cmd);
           return {
-            files: result.stdout.trim().split("\n").filter(Boolean),
-            truncated: result.stdout.split("\n").length >= 50,
-          };
-        },
-      }),
-
-      // Search file contents with grep
-      search_content: tool({
-        description:
-          "Search for text patterns inside files. Uses ripgrep (rg) for fast searching. " +
-          "Supports regex patterns. Returns matching lines with file paths.",
-        parameters: z.object({
-          pattern: z
-            .string()
-            .describe("Text or regex pattern to search for"),
-          path: z
-            .string()
-            .optional()
-            .default("/data")
-            .describe("Directory or file to search in"),
-          filePattern: z
-            .string()
-            .optional()
-            .describe("Only search files matching this glob (e.g., '*.py')"),
-          caseSensitive: z
-            .boolean()
-            .optional()
-            .default(false)
-            .describe("Whether the search is case-sensitive"),
-          context: z
-            .number()
-            .optional()
-            .default(0)
-            .describe("Number of context lines before and after match"),
-        }),
-        execute: async ({ pattern, path, filePattern, caseSensitive, context }) => {
-          let cmd = "rg";
-          if (!caseSensitive) cmd += " -i";
-          if (context && context > 0) cmd += ` -C ${context}`;
-          if (filePattern) cmd += ` -g '${filePattern}'`;
-          cmd += ` --max-count 100 '${pattern}' ${path || "/data"} 2>/dev/null | head -100`;
-
-          const result = await bashlet.exec(cmd);
-          return {
-            matches: result.stdout.trim(),
-            matchCount: result.stdout.trim().split("\n").filter(Boolean).length,
-            truncated: result.stdout.split("\n").length >= 100,
+            files: result.stdout.trim(),
           };
         },
       }),
@@ -132,18 +76,10 @@ export async function POST(req: Request) {
       // Read file contents
       read_file: tool({
         description:
-          "Read the contents of a file. Can read entire file or specific line ranges. " +
-          "Use this to get full content of files found via search.",
+          "Read the contents of a file. Can read entire file or first/last N lines. " +
+          "Use this to get full content of files.",
         parameters: z.object({
           path: z.string().describe("Path to the file to read"),
-          startLine: z
-            .number()
-            .optional()
-            .describe("Starting line number (1-indexed)"),
-          endLine: z
-            .number()
-            .optional()
-            .describe("Ending line number (1-indexed)"),
           head: z
             .number()
             .optional()
@@ -153,17 +89,14 @@ export async function POST(req: Request) {
             .optional()
             .describe("Only read last N lines"),
         }),
-        execute: async ({ path, startLine, endLine, head, tail }) => {
+        execute: async ({ path, head, tail }) => {
           let cmd: string;
 
-          if (startLine && endLine) {
-            cmd = `sed -n '${startLine},${endLine}p' '${path}'`;
-          } else if (head) {
+          if (head) {
             cmd = `head -n ${head} '${path}'`;
           } else if (tail) {
             cmd = `tail -n ${tail} '${path}'`;
           } else {
-            // Read full file but limit to 500 lines
             cmd = `head -n 500 '${path}'`;
           }
 
@@ -173,7 +106,7 @@ export async function POST(req: Request) {
           return {
             content: result.stdout,
             lineCount,
-            truncated: lineCount >= 500 && !head && !tail && !startLine,
+            truncated: lineCount >= 500 && !head && !tail,
           };
         },
       }),
@@ -182,7 +115,7 @@ export async function POST(req: Request) {
       list_directory: tool({
         description:
           "List the contents of a directory with details. " +
-          "Shows file sizes, permissions, and modification times.",
+          "Shows file sizes and modification times.",
         parameters: z.object({
           path: z
             .string()
@@ -193,7 +126,7 @@ export async function POST(req: Request) {
             .boolean()
             .optional()
             .default(false)
-            .describe("List recursively (tree view)"),
+            .describe("List recursively"),
           showHidden: z
             .boolean()
             .optional()
@@ -201,12 +134,13 @@ export async function POST(req: Request) {
             .describe("Show hidden files (starting with .)"),
         }),
         execute: async ({ path, recursive, showHidden }) => {
+          const targetPath = path || "/data";
           let cmd: string;
 
           if (recursive) {
-            cmd = `find ${path || "/data"} -type f ${showHidden ? "" : "! -name '.*'"} 2>/dev/null | head -200`;
+            cmd = `ls -R${showHidden ? "a" : ""} ${targetPath} 2>/dev/null | head -200`;
           } else {
-            cmd = `ls -lh${showHidden ? "a" : ""} ${path || "/data"} 2>/dev/null`;
+            cmd = `ls -lh${showHidden ? "a" : ""} ${targetPath} 2>/dev/null`;
           }
 
           const result = await bashlet.exec(cmd);
@@ -220,15 +154,13 @@ export async function POST(req: Request) {
       // Get file information
       file_info: tool({
         description:
-          "Get detailed information about a file including type, size, and line count.",
+          "Get detailed information about a file including size and line count.",
         parameters: z.object({
           path: z.string().describe("Path to the file"),
         }),
         execute: async ({ path }) => {
-          const result = await bashlet.exec(
-            `file '${path}' && stat '${path}' 2>/dev/null && wc -l < '${path}' 2>/dev/null`
-          );
-
+          const cmd = `stat '${path}' 2>/dev/null && echo "Lines:" && wc -l < '${path}' 2>/dev/null`;
+          const result = await bashlet.exec(cmd);
           return {
             info: result.stdout,
           };

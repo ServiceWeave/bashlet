@@ -14,7 +14,7 @@ use crate::sandbox::traits::{BackendCapabilities, SandboxBackend, SandboxInfo};
 use crate::sandbox::CommandResult;
 
 /// Wasmer version to download if not installed
-const WASMER_VERSION: &str = "v5.0.4";
+const WASMER_VERSION: &str = "v6.0.0";
 
 /// Wasmer registry WEBC download URL for bash
 const WASMER_BASH_WEBC_URL: &str =

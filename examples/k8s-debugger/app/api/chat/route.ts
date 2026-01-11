@@ -1,4 +1,4 @@
-import { anthropic } from "@ai-sdk/anthropic";
+import { openai } from "@ai-sdk/openai";
 import { streamText, tool } from "ai";
 import { z } from "zod";
 import { createK8sBashlet } from "@/lib/bashlet";
@@ -34,7 +34,7 @@ export async function POST(req: Request) {
   const { messages } = await req.json();
 
   const result = streamText({
-    model: anthropic("claude-sonnet-4-20250514"),
+    model: openai("gpt-4o"),
     system: SYSTEM_PROMPT,
     messages,
     maxSteps: 10,
