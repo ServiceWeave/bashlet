@@ -1,8 +1,8 @@
 # Bashlet
 
-Sandboxed bash execution environment with multiple backend support.
+Sandboxed bash execution for AI agents.
 
-Bashlet runs shell commands inside secure sandboxes with support for multiple isolation backends:
+Bashlet provides a secure sandbox for AI agents to execute shell commands, with support for multiple isolation backends:
 - **Wasmer** (WASM) - Cross-platform, lightweight sandbox
 - **Firecracker** (microVM) - Full Linux VM isolation on Linux with KVM
 
@@ -90,6 +90,20 @@ bashlet run my-session "ls /workspace"
 bashlet run my-session "cat /workspace/README.md"
 ```
 
+#### Run and Create in One Step
+
+Use `-C` / `--create` to automatically create the session if it doesn't exist:
+
+```bash
+# Creates 'dev' session if missing, then runs the command
+bashlet run dev -C --mount ./src:/workspace "ls /workspace"
+
+# Subsequent runs reuse the existing session
+bashlet run dev "cat /workspace/README.md"
+```
+
+This is useful for scripts where you want idempotent behavior.
+
 #### List Active Sessions
 
 ```bash
@@ -118,6 +132,7 @@ bashlet terminate my-session
 | `bashlet exec "command"` | One-shot command execution in sandbox |
 | `bashlet create` | Create a new persistent session |
 | `bashlet run SESSION "command"` | Run command in an existing session |
+| `bashlet run SESSION -C "command"` | Run command, creating session if missing |
 | `bashlet list` | List all active sessions |
 | `bashlet terminate SESSION` | Terminate a session |
 
@@ -150,6 +165,24 @@ Options:
   -w, --workdir <DIR>      Working directory in sandbox [default: /workspace]
   -b, --backend <BACKEND>  Sandbox backend: auto, wasmer, firecracker [default: auto]
       --ttl <TTL>          Time-to-live (e.g., 30m, 1h, 2d)
+  -h, --help               Print help
+```
+
+### Run Options
+
+```
+bashlet run [OPTIONS] <SESSION> <COMMAND>
+
+Arguments:
+  <SESSION>  Session ID or name
+  <COMMAND>  The shell command to execute
+
+Options:
+  -C, --create             Create the session if it doesn't exist
+  -m, --mount <MOUNT>      Mount host directories (requires --create)
+  -e, --env <ENV>          Environment variables (requires --create)
+      --workdir <DIR>      Working directory in sandbox (requires --create)
+      --ttl <TTL>          Time-to-live (requires --create)
   -h, --help               Print help
 ```
 

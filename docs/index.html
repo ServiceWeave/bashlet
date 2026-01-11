@@ -3,8 +3,8 @@
 <head>
     <meta charset="utf-8"/>
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-    <title>Bashlet - Sandboxed Bash Execution</title>
-    <meta name="description" content="Secure sandbox to execute shell commands. Multiple isolation backends with directory mounting and session management.">
+    <title>Bashlet - Sandboxed Bash for AI Agents</title>
+    <meta name="description" content="Secure sandbox for AI agents to execute shell commands. Multiple isolation backends with directory mounting and session management.">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐚</text></svg>">
     <link href="https://fonts.googleapis.com" rel="preconnect"/>
     <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
@@ -157,8 +157,8 @@
 
                         <div class="border-l-2 border-term-dim pl-4 py-2">
                             <p class="text-lg text-term-gray leading-relaxed max-w-lg">
-                                // Secure sandbox for shell commands.<br/>
-                                // Execute safely in isolation.<br/>
+                                // Secure sandbox for AI agents.<br/>
+                                // Execute shell commands safely.<br/>
                                 // Multiple backends available.
                             </p>
                         </div>
@@ -251,12 +251,12 @@
                         </h2>
                     </div>
                     <p class="text-term-gray max-w-2xl mx-auto font-mono text-sm">
-                        # Execute shell commands safely.<br/>
+                        # Let AI agents execute shell commands safely.<br/>
                         # Isolate untrusted code from your system.
                     </p>
                     <div class="mt-8 bg-term-dim/30 border border-term-dim p-4 inline-block max-w-xl">
                         <p class="font-mono text-xs text-term-amber">
-                            echo "Run any shell command in complete isolation." &gt;&gt; manifesto.txt
+                            echo "Give your AI agent safe access to the shell." &gt;&gt; manifesto.txt
                         </p>
                     </div>
                 </div>
@@ -422,7 +422,7 @@
                         </h2>
                     </div>
                     <p class="text-term-gray text-sm max-w-2xl mx-auto font-mono">
-                        # Simple CLI for one-shot commands and persistent sessions.
+                        # Simple CLI for AI agents to run one-shot commands and persistent sessions.
                     </p>
                 </div>
 
@@ -469,6 +469,9 @@ bashlet create <span class="flag">--name</span> my-session <span class="flag">--
 bashlet run my-session <span class="string">"ls /workspace"</span>
 bashlet run my-session <span class="string">"cat /workspace/README.md"</span>
 
+<span class="comment"># Or create and run in one step (idempotent)</span>
+bashlet run dev <span class="flag">-C</span> <span class="flag">--mount</span> ./src:/workspace <span class="string">"ls /workspace"</span>
+
 <span class="comment"># List active sessions</span>
 bashlet list
 
@@ -512,6 +515,10 @@ bashlet terminate my-session</code></pre>
                             <tr class="hover:bg-term-dim/20 transition-colors">
                                 <td class="p-4 text-term-blue whitespace-nowrap">bashlet run SESSION "cmd"</td>
                                 <td class="p-4 text-term-gray">Run command in an existing session</td>
+                            </tr>
+                            <tr class="hover:bg-term-dim/20 transition-colors">
+                                <td class="p-4 text-term-blue whitespace-nowrap">bashlet run SESSION -C "cmd"</td>
+                                <td class="p-4 text-term-gray">Run command, creating session if missing</td>
                             </tr>
                             <tr class="hover:bg-term-dim/20 transition-colors">
                                 <td class="p-4 text-term-blue whitespace-nowrap">bashlet list</td>
