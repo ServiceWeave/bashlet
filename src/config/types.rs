@@ -1,11 +1,31 @@
 use clap::ValueEnum;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::path::PathBuf;
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 #[serde(default)]
 pub struct BashletConfig {
     pub sandbox: SandboxConfig,
+    pub presets: HashMap<String, PresetConfig>,
+}
+
+/// Configuration for a preset environment.
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[serde(default)]
+pub struct PresetConfig {
+    /// Backend override (wasmer, firecracker, auto)
+    pub backend: Option<BackendType>,
+    /// Setup commands to run on session creation
+    pub setup_commands: Vec<String>,
+    /// Environment variables [(KEY, VALUE), ...]
+    pub env_vars: Vec<(String, String)>,
+    /// Mount specifications [(host_path, guest_path, readonly), ...]
+    pub mounts: Vec<(String, String, bool)>,
+    /// Working directory override
+    pub workdir: Option<String>,
+    /// Custom rootfs image path (Firecracker only)
+    pub rootfs_image: Option<PathBuf>,
 }
 
 /// The type of sandbox backend to use.

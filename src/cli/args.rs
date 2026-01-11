@@ -64,6 +64,10 @@ pub struct CreateArgs {
     #[clap(long, short = 'n')]
     pub name: Option<String>,
 
+    /// Apply a preset configuration
+    #[clap(long, short = 'p')]
+    pub preset: Option<String>,
+
     /// Mount host directories into sandbox (host_path:guest_path[:ro])
     #[clap(long = "mount", short = 'm', value_parser = parse_mount)]
     pub mounts: Vec<Mount>,
@@ -92,6 +96,30 @@ pub struct SessionRunArgs {
 
     /// Command to execute
     pub command: String,
+
+    /// Create the session if it doesn't exist
+    #[clap(long, short = 'C')]
+    pub create: bool,
+
+    /// Apply a preset configuration (requires --create)
+    #[clap(long, short = 'p', requires = "create")]
+    pub preset: Option<String>,
+
+    /// Mount host directories into sandbox (host_path:guest_path[:ro]) - requires --create
+    #[clap(long = "mount", short = 'm', value_parser = parse_mount, requires = "create")]
+    pub mounts: Vec<Mount>,
+
+    /// Environment variables to set in sandbox (KEY=VALUE) - requires --create
+    #[clap(long = "env", short = 'e', value_parser = parse_env_var, requires = "create")]
+    pub env_vars: Vec<(String, String)>,
+
+    /// Working directory inside sandbox - requires --create
+    #[clap(long, default_value = "/workspace", requires = "create")]
+    pub workdir: String,
+
+    /// Session time-to-live (e.g., "5m", "1h", "30s") - requires --create
+    #[clap(long, requires = "create")]
+    pub ttl: Option<String>,
 }
 
 #[derive(Args, Debug)]
@@ -104,6 +132,10 @@ pub struct TerminateArgs {
 pub struct ExecArgs {
     /// Command to execute
     pub command: String,
+
+    /// Apply a preset configuration
+    #[clap(long, short = 'p')]
+    pub preset: Option<String>,
 
     /// Sandbox backend to use (wasmer, firecracker, auto)
     #[clap(long, short = 'b', value_enum)]

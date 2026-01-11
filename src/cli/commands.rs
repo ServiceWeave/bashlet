@@ -1,17 +1,90 @@
+use std::path::PathBuf;
 use std::time::{Duration, UNIX_EPOCH};
 
 use chrono::{DateTime, Local, Utc};
 use tracing::info;
 
 use crate::cli::args::{
-    ConfigAction, ConfigArgs, CreateArgs, ExecArgs, InitArgs, ListArgs, OutputFormat,
+    ConfigAction, ConfigArgs, CreateArgs, ExecArgs, InitArgs, ListArgs, Mount, OutputFormat,
     SessionRunArgs, TerminateArgs,
 };
 use crate::config::loader::get_config_path;
-use crate::config::types::BashletConfig;
-use crate::error::Result;
+use crate::config::types::{BashletConfig, SandboxConfig};
+use crate::error::{BashletError, Result};
 use crate::sandbox::{create_backend, CommandResult, RuntimeConfig};
 use crate::session::{parse_ttl, Session, SessionManager};
+
+// ============================================================================
+// Preset Helpers
+// ============================================================================
+
+/// Expand tilde (~) in a path string to the user's home directory.
+fn expand_tilde(path: &str) -> PathBuf {
+    if let Ok(home) = std::env::var("HOME") {
+        if path.starts_with("~/") {
+            return PathBuf::from(home).join(&path[2..]);
+        } else if path == "~" {
+            return PathBuf::from(home);
+        }
+    }
+    PathBuf::from(path)
+}
+
+/// Apply a preset configuration, merging with CLI arguments.
+/// Returns the setup commands to run after backend creation.
+fn apply_preset(
+    preset_name: &str,
+    config: &BashletConfig,
+    mounts: &mut Vec<Mount>,
+    env_vars: &mut Vec<(String, String)>,
+    workdir: &mut String,
+    sandbox_config: &mut SandboxConfig,
+) -> Result<Vec<String>> {
+    let preset = config
+        .presets
+        .get(preset_name)
+        .ok_or_else(|| BashletError::PresetNotFound {
+            name: preset_name.to_string(),
+        })?;
+
+    info!(preset = %preset_name, "Applying preset configuration");
+
+    // Merge mounts (preset first, CLI args can add more)
+    let preset_mounts: Vec<Mount> = preset
+        .mounts
+        .iter()
+        .map(|(host, guest, ro)| Mount {
+            host_path: expand_tilde(host),
+            guest_path: guest.clone(),
+            readonly: *ro,
+        })
+        .collect();
+    mounts.splice(0..0, preset_mounts);
+
+    // Merge env vars (preset first, CLI args can override)
+    let mut merged_env = preset.env_vars.clone();
+    merged_env.extend(env_vars.drain(..));
+    *env_vars = merged_env;
+
+    // Apply workdir if not overridden by CLI (check if it's the default value)
+    if let Some(ref preset_workdir) = preset.workdir {
+        if workdir == "/workspace" {
+            *workdir = preset_workdir.clone();
+        }
+    }
+
+    // Apply backend override
+    if let Some(ref backend) = preset.backend {
+        sandbox_config.backend = backend.clone();
+    }
+
+    // Apply rootfs_image for Firecracker
+    if let Some(ref rootfs) = preset.rootfs_image {
+        sandbox_config.firecracker.rootfs_path = Some(expand_tilde(&rootfs.display().to_string()));
+    }
+
+    Ok(preset.setup_commands.clone())
+}
 
 // ============================================================================
 // Session Commands
@@ -38,29 +111,61 @@ pub async fn create(args: CreateArgs, config: BashletConfig, format: OutputForma
 
     // Handle legacy --wasm flag by updating wasmer config
     let mut sandbox_config = config.sandbox.clone();
-    if let Some(wasm_path) = args.wasm {
+    if let Some(wasm_path) = args.wasm.clone() {
         sandbox_config.wasmer.wasm_binary = Some(wasm_path);
     }
+
+    // Prepare mutable args for preset merging
+    let mut mounts = args.mounts.clone();
+    let mut env_vars = args.env_vars.clone();
+    let mut workdir = args.workdir.clone();
+
+    // Apply preset if specified
+    let setup_commands = if let Some(ref preset_name) = args.preset {
+        apply_preset(
+            preset_name,
+            &config,
+            &mut mounts,
+            &mut env_vars,
+            &mut workdir,
+            &mut sandbox_config,
+        )?
+    } else {
+        vec![]
+    };
 
     // Create session
     let session = Session::new(
         args.name,
-        args.mounts.clone(),
-        args.env_vars.clone(),
-        args.workdir.clone(),
+        mounts.clone(),
+        env_vars.clone(),
+        workdir.clone(),
         sandbox_config.wasmer.wasm_binary.clone(),
         ttl_seconds,
+        args.preset.clone(),
     );
 
-    // Test that the sandbox can be initialized
+    // Create the sandbox backend
     let runtime = RuntimeConfig {
-        mounts: args.mounts,
-        env_vars: args.env_vars,
-        workdir: args.workdir,
+        mounts,
+        env_vars,
+        workdir,
         memory_limit_mb: sandbox_config.memory_limit_mb,
         timeout_seconds: sandbox_config.timeout_seconds,
     };
-    create_backend(&sandbox_config, runtime).await?;
+    let backend = create_backend(&sandbox_config, runtime).await?;
+
+    // Run setup commands
+    for cmd in &setup_commands {
+        info!(command = %cmd, "Running setup command");
+        let result = backend.execute(cmd).await?;
+        if result.exit_code != 0 {
+            return Err(BashletError::SandboxExecution(format!(
+                "Setup command failed: {}",
+                cmd
+            )));
+        }
+    }
 
     // Save session
     let session_id = session.id.clone();
@@ -95,8 +200,55 @@ pub async fn run(args: SessionRunArgs, config: BashletConfig, format: OutputForm
 
     let manager = SessionManager::new();
 
-    // Get and update session
-    let session = manager.get(&args.session).await?;
+    // Try to get existing session, or create if --create flag is set
+    let (session, setup_commands) = match manager.get(&args.session).await {
+        Ok(session) => (session, vec![]),
+        Err(crate::error::BashletError::SessionNotFound { .. }) if args.create => {
+            info!(session = %args.session, "Session not found, creating new session");
+
+            // Parse TTL if provided
+            let ttl_seconds = match &args.ttl {
+                Some(ttl_str) => Some(parse_ttl(ttl_str)?),
+                None => None,
+            };
+
+            // Prepare mutable args for preset merging
+            let mut mounts = args.mounts.clone();
+            let mut env_vars = args.env_vars.clone();
+            let mut workdir = args.workdir.clone();
+            let mut sandbox_config = config.sandbox.clone();
+
+            // Apply preset if specified
+            let setup_commands = if let Some(ref preset_name) = args.preset {
+                apply_preset(
+                    preset_name,
+                    &config,
+                    &mut mounts,
+                    &mut env_vars,
+                    &mut workdir,
+                    &mut sandbox_config,
+                )?
+            } else {
+                vec![]
+            };
+
+            // Create session with the provided name
+            let session = Session::new(
+                Some(args.session.clone()),
+                mounts,
+                env_vars,
+                workdir,
+                sandbox_config.wasmer.wasm_binary.clone(),
+                ttl_seconds,
+                args.preset.clone(),
+            );
+
+            manager.save(&session).await?;
+            (session, setup_commands)
+        }
+        Err(e) => return Err(e),
+    };
+
     manager.touch(&args.session).await?;
 
     // Build sandbox config from session
@@ -114,6 +266,19 @@ pub async fn run(args: SessionRunArgs, config: BashletConfig, format: OutputForm
     };
 
     let backend = create_backend(&sandbox_config, runtime).await?;
+
+    // Run setup commands if this is a newly created session
+    for cmd in &setup_commands {
+        info!(command = %cmd, "Running setup command");
+        let result = backend.execute(cmd).await?;
+        if result.exit_code != 0 {
+            return Err(BashletError::SandboxExecution(format!(
+                "Setup command failed: {}",
+                cmd
+            )));
+        }
+    }
+
     let result = backend.execute(&args.command).await?;
 
     output_command_result(&result, format);
@@ -153,24 +318,56 @@ pub async fn exec(args: ExecArgs, config: BashletConfig, format: OutputFormat) -
     let mut sandbox_config = config.sandbox.clone();
 
     // Override backend if specified
-    if let Some(backend) = args.backend {
+    if let Some(backend) = args.backend.clone() {
         sandbox_config.backend = backend;
     }
 
     // Handle legacy --wasm flag
-    if let Some(wasm_path) = args.wasm {
+    if let Some(wasm_path) = args.wasm.clone() {
         sandbox_config.wasmer.wasm_binary = Some(wasm_path);
     }
 
+    // Prepare mutable args for preset merging
+    let mut mounts = args.mounts.clone();
+    let mut env_vars = args.env_vars.clone();
+    let mut workdir = args.workdir.clone();
+
+    // Apply preset if specified
+    let setup_commands = if let Some(ref preset_name) = args.preset {
+        apply_preset(
+            preset_name,
+            &config,
+            &mut mounts,
+            &mut env_vars,
+            &mut workdir,
+            &mut sandbox_config,
+        )?
+    } else {
+        vec![]
+    };
+
     let runtime = RuntimeConfig {
-        mounts: args.mounts,
-        env_vars: args.env_vars,
-        workdir: args.workdir,
+        mounts,
+        env_vars,
+        workdir,
         memory_limit_mb: sandbox_config.memory_limit_mb,
         timeout_seconds: sandbox_config.timeout_seconds,
     };
 
     let backend = create_backend(&sandbox_config, runtime).await?;
+
+    // Run setup commands
+    for cmd in &setup_commands {
+        info!(command = %cmd, "Running setup command");
+        let result = backend.execute(cmd).await?;
+        if result.exit_code != 0 {
+            return Err(BashletError::SandboxExecution(format!(
+                "Setup command failed: {}",
+                cmd
+            )));
+        }
+    }
+
     let result = backend.execute(&args.command).await?;
 
     output_command_result(&result, format);

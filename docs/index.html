@@ -480,6 +480,38 @@ bashlet terminate my-session</code></pre>
                         </div>
                     </div>
 
+                    <!-- Presets -->
+                    <div>
+                        <h3 class="font-mono text-xl font-bold mb-4 flex items-center gap-3 text-white uppercase">
+                            <span class="material-symbols-outlined text-term-green">settings</span>
+                            03_Presets
+                        </h3>
+                        <p class="text-term-gray mb-4 text-sm font-mono"># Define reusable environment configurations in ~/.config/bashlet/config.toml</p>
+                        <div class="border border-term-dim bg-black overflow-hidden">
+                            <div class="flex items-center justify-between px-4 py-2 bg-term-dim/50 border-b border-term-dim">
+                                <span class="text-xs text-term-gray uppercase tracking-wider">config.toml</span>
+                                <button onclick="copyCode(this)" class="text-xs text-term-gray hover:text-white transition-colors">Copy</button>
+                            </div>
+                            <pre class="p-4 text-sm overflow-x-auto"><code><span class="comment"># Define a preset with mounts and env vars</span>
+[presets.kubectl]
+mounts = [
+  [<span class="string">"/usr/local/bin/kubectl"</span>, <span class="string">"/usr/local/bin/kubectl"</span>, true],
+  [<span class="string">"~/.kube"</span>, <span class="string">"/home/.kube"</span>, true]
+]
+env_vars = [[<span class="string">"KUBECONFIG"</span>, <span class="string">"/home/.kube/config"</span>]]
+setup_commands = [<span class="string">"kubectl version --client"</span>]</code></pre>
+                        </div>
+                        <div class="border border-term-dim bg-black overflow-hidden mt-4">
+                            <div class="flex items-center justify-between px-4 py-2 bg-term-dim/50 border-b border-term-dim">
+                                <span class="text-xs text-term-gray uppercase tracking-wider">Shell</span>
+                                <button onclick="copyCode(this)" class="text-xs text-term-gray hover:text-white transition-colors">Copy</button>
+                            </div>
+                            <pre class="p-4 text-sm overflow-x-auto"><code><span class="comment"># Use a preset</span>
+bashlet create <span class="flag">--name</span> k8s <span class="flag">--preset</span> kubectl
+bashlet exec <span class="flag">--preset</span> kubectl <span class="string">"kubectl get pods"</span></code></pre>
+                        </div>
+                    </div>
+
                 </div>
             </div>
         </section>
@@ -509,8 +541,16 @@ bashlet terminate my-session</code></pre>
                                 <td class="p-4 text-term-gray">One-shot command execution in sandbox</td>
                             </tr>
                             <tr class="hover:bg-term-dim/20 transition-colors">
+                                <td class="p-4 text-term-blue whitespace-nowrap">bashlet exec --preset NAME "cmd"</td>
+                                <td class="p-4 text-term-gray">One-shot with preset configuration</td>
+                            </tr>
+                            <tr class="hover:bg-term-dim/20 transition-colors">
                                 <td class="p-4 text-term-blue whitespace-nowrap">bashlet create</td>
                                 <td class="p-4 text-term-gray">Create a new persistent session</td>
+                            </tr>
+                            <tr class="hover:bg-term-dim/20 transition-colors">
+                                <td class="p-4 text-term-blue whitespace-nowrap">bashlet create --preset NAME</td>
+                                <td class="p-4 text-term-gray">Create session with preset</td>
                             </tr>
                             <tr class="hover:bg-term-dim/20 transition-colors">
                                 <td class="p-4 text-term-blue whitespace-nowrap">bashlet run SESSION "cmd"</td>

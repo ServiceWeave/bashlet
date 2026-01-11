@@ -67,6 +67,9 @@ pub enum BashletError {
     #[error("Session not found: {id}")]
     SessionNotFound { id: String },
 
+    #[error("Preset not found: {name}")]
+    PresetNotFound { name: String },
+
     #[error("Session expired: {id}")]
     SessionExpired { id: String },
 

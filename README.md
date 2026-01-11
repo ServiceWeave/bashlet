@@ -125,14 +125,91 @@ def456       temp-session     2024-01-10 15:25     1h         ./data:/data
 bashlet terminate my-session
 ```
 
+### Presets
+
+Presets allow you to define reusable environment configurations with mounts, environment variables, and setup commands. This is ideal for creating consistent development environments.
+
+#### Defining Presets
+
+Add presets to your configuration file (`~/.config/bashlet/config.toml`):
+
+```toml
+[presets.kubectl]
+mounts = [
+  ["/usr/local/bin/kubectl", "/usr/local/bin/kubectl", true],
+  ["~/.kube", "/home/.kube", true]
+]
+env_vars = [["KUBECONFIG", "/home/.kube/config"]]
+setup_commands = ["kubectl version --client"]
+
+[presets.nodejs]
+mounts = [["~/.npm", "/home/.npm", false]]
+env_vars = [["NODE_ENV", "development"]]
+workdir = "/app"
+```
+
+#### Using Presets
+
+Apply a preset when creating sessions or running commands:
+
+```bash
+# Create a session with a preset
+bashlet create --name k8s-env --preset kubectl
+
+# One-shot command with a preset
+bashlet exec --preset kubectl "kubectl get pods"
+
+# Run with auto-create and preset
+bashlet run dev -C --preset nodejs "npm install"
+```
+
+#### Preset Configuration Options
+
+| Field | Description |
+|-------|-------------|
+| `backend` | Backend override: `wasmer`, `firecracker`, or `auto` |
+| `mounts` | Mount specifications: `[[host, guest, readonly], ...]` |
+| `env_vars` | Environment variables: `[[KEY, VALUE], ...]` |
+| `workdir` | Working directory inside sandbox |
+| `setup_commands` | Commands to run when session is created |
+| `rootfs_image` | Custom rootfs image path (Firecracker only) |
+
+#### Persistent Storage with Presets
+
+Mount a host directory for data that persists across sessions:
+
+```toml
+[presets.myenv]
+mounts = [
+  ["~/.bashlet/data/myenv", "/data", false]  # writable persistent storage
+]
+setup_commands = ["test -d /data/cache || mkdir -p /data/cache"]
+```
+
+#### Firecracker with Persistent Rootfs
+
+For full Linux environment persistence, use Firecracker with a custom rootfs image:
+
+```toml
+[presets.dev-vm]
+backend = "firecracker"
+rootfs_image = "~/.bashlet/images/dev.ext4"
+setup_commands = ["echo 'VM ready'"]
+```
+
+Changes to the rootfs (installed packages, modified files) persist across sessions.
+
 ## Command Reference
 
 | Command | Description |
 |---------|-------------|
 | `bashlet exec "command"` | One-shot command execution in sandbox |
+| `bashlet exec --preset NAME "command"` | One-shot with preset configuration |
 | `bashlet create` | Create a new persistent session |
+| `bashlet create --preset NAME` | Create session with preset |
 | `bashlet run SESSION "command"` | Run command in an existing session |
 | `bashlet run SESSION -C "command"` | Run command, creating session if missing |
+| `bashlet run SESSION -C --preset NAME "command"` | Run with auto-create and preset |
 | `bashlet list` | List all active sessions |
 | `bashlet terminate SESSION` | Terminate a session |
 
@@ -145,6 +222,7 @@ Arguments:
   <COMMAND>  The shell command to execute
 
 Options:
+  -p, --preset <PRESET>    Apply a preset configuration
   -m, --mount <MOUNT>      Mount host directories (host_path:guest_path[:ro])
   -e, --env <ENV>          Environment variables (KEY=VALUE)
   -w, --workdir <DIR>      Working directory in sandbox [default: /workspace]
@@ -160,10 +238,10 @@ bashlet create [OPTIONS]
 
 Options:
   -n, --name <NAME>        Session name (auto-generated if not provided)
+  -p, --preset <PRESET>    Apply a preset configuration
   -m, --mount <MOUNT>      Mount host directories (host_path:guest_path[:ro])
   -e, --env <ENV>          Environment variables (KEY=VALUE)
   -w, --workdir <DIR>      Working directory in sandbox [default: /workspace]
-  -b, --backend <BACKEND>  Sandbox backend: auto, wasmer, firecracker [default: auto]
       --ttl <TTL>          Time-to-live (e.g., 30m, 1h, 2d)
   -h, --help               Print help
 ```
@@ -179,6 +257,7 @@ Arguments:
 
 Options:
   -C, --create             Create the session if it doesn't exist
+  -p, --preset <PRESET>    Apply a preset configuration (requires --create)
   -m, --mount <MOUNT>      Mount host directories (requires --create)
   -e, --env <ENV>          Environment variables (requires --create)
       --workdir <DIR>      Working directory in sandbox (requires --create)
@@ -298,6 +377,25 @@ timeout_seconds = 300
 [sandbox.firecracker]
 vcpu_count = 1
 enable_networking = false
+
+# Presets for reusable environment configurations
+[presets.kubectl]
+mounts = [
+  ["/usr/local/bin/kubectl", "/usr/local/bin/kubectl", true],
+  ["~/.kube", "/home/.kube", true]
+]
+env_vars = [["KUBECONFIG", "/home/.kube/config"]]
+setup_commands = ["kubectl version --client"]
+
+[presets.python]
+mounts = [["~/.bashlet/data/python", "/data", false]]
+env_vars = [["PYTHONUNBUFFERED", "1"]]
+workdir = "/app"
+
+[presets.dev-vm]
+backend = "firecracker"
+rootfs_image = "~/.bashlet/images/dev.ext4"
+env_vars = [["EDITOR", "vim"]]
 ```
 
 ## License

@@ -30,6 +30,9 @@ pub struct Session {
     pub last_activity: u64,
     /// Time-to-live in seconds (None = no expiration)
     pub ttl_seconds: Option<u64>,
+    /// Preset used to create this session
+    #[serde(default)]
+    pub preset: Option<String>,
 }
 
 /// Serializable version of Mount (PathBuf needs special handling)
@@ -69,6 +72,7 @@ impl Session {
         workdir: String,
         wasm_binary: Option<PathBuf>,
         ttl_seconds: Option<u64>,
+        preset: Option<String>,
     ) -> Self {
         let now = SystemTime::now()
             .duration_since(UNIX_EPOCH)
@@ -88,6 +92,7 @@ impl Session {
             created_at: now,
             last_activity: now,
             ttl_seconds,
+            preset,
         }
     }
 

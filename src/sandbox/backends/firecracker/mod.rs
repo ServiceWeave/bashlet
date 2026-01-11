@@ -55,12 +55,24 @@ impl FirecrackerBackend {
 
         let assets = AssetManager::new();
 
-        // Get or download kernel, rootfs, and firecracker binary
+        // Get or download kernel and firecracker binary
         let kernel_path = assets.get_kernel(config.kernel_path.as_ref()).await?;
-        let rootfs_path = assets.create_rootfs_copy(&instance_id).await?;
         let binary_path = assets
             .get_firecracker_binary(config.binary_path.as_ref())
             .await?;
+
+        // Use custom rootfs if provided (persistent), otherwise create a copy (ephemeral)
+        let rootfs_path = if let Some(ref custom_rootfs) = config.rootfs_path {
+            if !custom_rootfs.exists() {
+                return Err(BashletError::AssetDownload {
+                    url: format!("Rootfs image not found: {}", custom_rootfs.display()),
+                });
+            }
+            info!(path = %custom_rootfs.display(), "Using persistent rootfs image");
+            custom_rootfs.clone()
+        } else {
+            assets.create_rootfs_copy(&instance_id).await?
+        };
 
         // Generate socket path
         let socket_path = std::env::temp_dir().join(format!("firecracker-{}.sock", instance_id));
