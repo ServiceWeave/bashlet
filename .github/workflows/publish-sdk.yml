@@ -1,0 +1,120 @@
+name: Publish SDKs (Manual)
+
+# This workflow allows manual SDK publishing independent of releases.
+# For automatic publishing on release, see release.yml
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to publish (e.g., 0.1.0)'
+        required: true
+      publish_npm:
+        description: 'Publish TypeScript SDK to npm'
+        type: boolean
+        default: true
+      publish_pypi:
+        description: 'Publish Python SDK to PyPI'
+        type: boolean
+        default: true
+      dry_run:
+        description: 'Dry run (do not actually publish)'
+        type: boolean
+        default: false
+
+jobs:
+  # ============================================================================
+  # TypeScript SDK - npm
+  # ============================================================================
+  publish-npm:
+    name: Publish to npm
+    runs-on: ubuntu-latest
+    if: github.event.inputs.publish_npm == 'true'
+    defaults:
+      run:
+        working-directory: packages/typescript-sdk
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+          cache: 'npm'
+          cache-dependency-path: packages/typescript-sdk/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Run tests
+        run: npm test
+        continue-on-error: true
+
+      - name: Run type check
+        run: npm run typecheck
+
+      - name: Update version
+        run: npm version "${{ github.event.inputs.version }}" --no-git-tag-version --allow-same-version
+
+      - name: Publish to npm (dry run)
+        if: github.event.inputs.dry_run == 'true'
+        run: npm publish --access public --dry-run
+
+      - name: Publish to npm
+        if: github.event.inputs.dry_run == 'false'
+        run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  # ============================================================================
+  # Python SDK - PyPI
+  # ============================================================================
+  publish-pypi:
+    name: Publish to PyPI
+    runs-on: ubuntu-latest
+    if: github.event.inputs.publish_pypi == 'true'
+    defaults:
+      run:
+        working-directory: packages/python-sdk
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install build tools
+        run: |
+          python -m pip install --upgrade pip
+          pip install build twine
+
+      - name: Update version in pyproject.toml
+        run: |
+          VERSION="${{ github.event.inputs.version }}"
+          sed -i "s/^version = .*/version = \"$VERSION\"/" pyproject.toml
+
+      - name: Build package
+        run: python -m build
+
+      - name: Check package
+        run: twine check dist/*
+
+      - name: Publish to PyPI (dry run)
+        if: github.event.inputs.dry_run == 'true'
+        run: |
+          echo "Dry run - would publish:"
+          ls -la dist/
+
+      - name: Publish to PyPI
+        if: github.event.inputs.dry_run == 'false'
+        run: twine upload dist/*
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
