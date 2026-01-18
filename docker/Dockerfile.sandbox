@@ -1,0 +1,10 @@
+FROM alpine:3.19
+
+# Install bash and basic utilities for a functional shell environment
+RUN apk add --no-cache bash coreutils
+
+# Create workspace directory
+WORKDIR /workspace
+
+# Use bash as the entrypoint with -c to execute commands
+ENTRYPOINT ["/bin/bash", "-c"]

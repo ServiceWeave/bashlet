@@ -36,6 +36,8 @@ pub enum BackendType {
     Wasmer,
     /// Firecracker microVM (Linux with KVM only)
     Firecracker,
+    /// Docker container sandbox
+    Docker,
     /// Automatically select the best available backend
     #[default]
     Auto,
@@ -56,6 +58,8 @@ pub struct SandboxConfig {
     pub wasmer: WasmerConfig,
     /// Firecracker-specific configuration
     pub firecracker: FirecrackerConfig,
+    /// Docker-specific configuration
+    pub docker: DockerConfig,
 }
 
 impl Default for SandboxConfig {
@@ -67,6 +71,7 @@ impl Default for SandboxConfig {
             timeout_seconds: 300,
             wasmer: WasmerConfig::default(),
             firecracker: FirecrackerConfig::default(),
+            docker: DockerConfig::default(),
         }
     }
 }
@@ -103,6 +108,33 @@ impl Default for FirecrackerConfig {
             rootfs_path: None,
             vcpu_count: 1,
             enable_networking: false,
+        }
+    }
+}
+
+/// Docker-specific configuration.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(default)]
+pub struct DockerConfig {
+    /// Custom Docker image name (default: bashlet-sandbox:latest)
+    pub image: Option<String>,
+    /// Automatically build the image if it doesn't exist (default: true)
+    pub build_image: bool,
+    /// Enable networking in the container (default: false)
+    pub enable_networking: bool,
+    /// Enable session mode for persistent container (default: false)
+    /// When enabled, a single container stays running and commands are executed via docker exec.
+    /// The container is only terminated when shutdown() is called.
+    pub session_mode: bool,
+}
+
+impl Default for DockerConfig {
+    fn default() -> Self {
+        Self {
+            image: None,
+            build_image: true,
+            enable_networking: false,
+            session_mode: false,
         }
     }
 }

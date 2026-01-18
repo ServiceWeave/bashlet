@@ -9,6 +9,9 @@ use crate::sandbox::backends::WasmerBackend;
 #[cfg(all(feature = "firecracker", target_os = "linux"))]
 use crate::sandbox::backends::FirecrackerBackend;
 
+#[cfg(feature = "docker")]
+use crate::sandbox::backends::DockerBackend;
+
 /// Runtime configuration for creating a sandbox backend.
 ///
 /// This combines the persistent configuration from the config file
@@ -73,6 +76,25 @@ pub async fn create_backend(
             },
         }),
 
+        #[cfg(feature = "docker")]
+        BackendType::Docker => {
+            let backend = DockerBackend::new(
+                config.docker.clone(),
+                runtime.mounts,
+                runtime.env_vars,
+                runtime.workdir,
+                runtime.memory_limit_mb,
+            )
+            .await?;
+            Ok(Box::new(backend))
+        }
+        #[cfg(not(feature = "docker"))]
+        BackendType::Docker => Err(BashletError::BackendNotAvailable {
+            backend: "docker".to_string(),
+            reason: "Docker support was not compiled in. Rebuild with --features docker"
+                .to_string(),
+        }),
+
         BackendType::Auto => {
             // Already resolved by resolve_backend_type
             unreachable!()
@@ -84,7 +106,7 @@ pub async fn create_backend(
 fn resolve_backend_type(requested: &BackendType) -> Result<BackendType> {
     match requested {
         BackendType::Auto => {
-            // Prefer Firecracker on Linux with KVM, fall back to Wasmer
+            // Priority: Firecracker (Linux + KVM) > Docker > Wasmer
             #[cfg(all(feature = "firecracker", target_os = "linux"))]
             {
                 if FirecrackerBackend::is_available() {
@@ -92,12 +114,19 @@ fn resolve_backend_type(requested: &BackendType) -> Result<BackendType> {
                 }
             }
 
-            #[cfg(feature = "wasmer")]
+            #[cfg(feature = "docker")]
             {
-                Ok(BackendType::Wasmer)
+                if DockerBackend::is_available() {
+                    return Ok(BackendType::Docker);
+                }
             }
 
-            #[cfg(not(feature = "wasmer"))]
+            #[cfg(feature = "wasmer")]
+            {
+                return Ok(BackendType::Wasmer);
+            }
+
+            #[cfg(not(any(feature = "wasmer", feature = "docker")))]
             {
                 return Err(BashletError::BackendNotAvailable {
                     backend: "auto".to_string(),
@@ -117,6 +146,19 @@ fn resolve_backend_type(requested: &BackendType) -> Result<BackendType> {
                 }
             }
             Ok(BackendType::Firecracker)
+        }
+        BackendType::Docker => {
+            #[cfg(feature = "docker")]
+            {
+                if !DockerBackend::is_available() {
+                    return Err(BashletError::BackendNotAvailable {
+                        backend: "docker".to_string(),
+                        reason: "Docker daemon is not accessible. Ensure Docker is installed and running."
+                            .to_string(),
+                    });
+                }
+            }
+            Ok(BackendType::Docker)
         }
         other => Ok(other.clone()),
     }
@@ -175,6 +217,30 @@ pub fn available_backends() -> Vec<BackendInfo> {
             } else {
                 "Only available on Linux"
             }),
+        });
+    }
+
+    #[cfg(feature = "docker")]
+    {
+        backends.push(BackendInfo {
+            name: "docker",
+            available: DockerBackend::is_available(),
+            description: "Docker container sandbox",
+            unavailable_reason: if DockerBackend::is_available() {
+                None
+            } else {
+                Some("Docker daemon not accessible")
+            },
+        });
+    }
+
+    #[cfg(not(feature = "docker"))]
+    {
+        backends.push(BackendInfo {
+            name: "docker",
+            available: false,
+            description: "Docker container sandbox",
+            unavailable_reason: Some("Not compiled in (use --features docker)"),
         });
     }
 
