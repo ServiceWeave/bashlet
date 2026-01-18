@@ -9,7 +9,6 @@ use crate::sandbox::backends::WasmerBackend;
 #[cfg(all(feature = "firecracker", target_os = "linux"))]
 use crate::sandbox::backends::FirecrackerBackend;
 
-#[cfg(feature = "docker")]
 use crate::sandbox::backends::DockerBackend;
 
 /// Runtime configuration for creating a sandbox backend.
@@ -76,7 +75,6 @@ pub async fn create_backend(
             },
         }),
 
-        #[cfg(feature = "docker")]
         BackendType::Docker => {
             let backend = DockerBackend::new(
                 config.docker.clone(),
@@ -88,12 +86,6 @@ pub async fn create_backend(
             .await?;
             Ok(Box::new(backend))
         }
-        #[cfg(not(feature = "docker"))]
-        BackendType::Docker => Err(BashletError::BackendNotAvailable {
-            backend: "docker".to_string(),
-            reason: "Docker support was not compiled in. Rebuild with --features docker"
-                .to_string(),
-        }),
 
         BackendType::Auto => {
             // Already resolved by resolve_backend_type
@@ -114,11 +106,8 @@ fn resolve_backend_type(requested: &BackendType) -> Result<BackendType> {
                 }
             }
 
-            #[cfg(feature = "docker")]
-            {
-                if DockerBackend::is_available() {
-                    return Ok(BackendType::Docker);
-                }
+            if DockerBackend::is_available() {
+                return Ok(BackendType::Docker);
             }
 
             #[cfg(feature = "wasmer")]
@@ -126,7 +115,7 @@ fn resolve_backend_type(requested: &BackendType) -> Result<BackendType> {
                 return Ok(BackendType::Wasmer);
             }
 
-            #[cfg(not(any(feature = "wasmer", feature = "docker")))]
+            #[cfg(not(feature = "wasmer"))]
             {
                 return Err(BashletError::BackendNotAvailable {
                     backend: "auto".to_string(),
@@ -148,15 +137,12 @@ fn resolve_backend_type(requested: &BackendType) -> Result<BackendType> {
             Ok(BackendType::Firecracker)
         }
         BackendType::Docker => {
-            #[cfg(feature = "docker")]
-            {
-                if !DockerBackend::is_available() {
-                    return Err(BashletError::BackendNotAvailable {
-                        backend: "docker".to_string(),
-                        reason: "Docker daemon is not accessible. Ensure Docker is installed and running."
-                            .to_string(),
-                    });
-                }
+            if !DockerBackend::is_available() {
+                return Err(BashletError::BackendNotAvailable {
+                    backend: "docker".to_string(),
+                    reason: "Docker daemon is not accessible. Ensure Docker is installed and running."
+                        .to_string(),
+                });
             }
             Ok(BackendType::Docker)
         }
@@ -220,29 +206,16 @@ pub fn available_backends() -> Vec<BackendInfo> {
         });
     }
 
-    #[cfg(feature = "docker")]
-    {
-        backends.push(BackendInfo {
-            name: "docker",
-            available: DockerBackend::is_available(),
-            description: "Docker container sandbox",
-            unavailable_reason: if DockerBackend::is_available() {
-                None
-            } else {
-                Some("Docker daemon not accessible")
-            },
-        });
-    }
-
-    #[cfg(not(feature = "docker"))]
-    {
-        backends.push(BackendInfo {
-            name: "docker",
-            available: false,
-            description: "Docker container sandbox",
-            unavailable_reason: Some("Not compiled in (use --features docker)"),
-        });
-    }
+    backends.push(BackendInfo {
+        name: "docker",
+        available: DockerBackend::is_available(),
+        description: "Docker container sandbox",
+        unavailable_reason: if DockerBackend::is_available() {
+            None
+        } else {
+            Some("Docker daemon not accessible")
+        },
+    });
 
     backends
 }

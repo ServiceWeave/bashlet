@@ -58,8 +58,7 @@ hyperlocal = { version = "0.9", optional = true }
 default = ["wasmer"]
 wasmer = []
 firecracker = ["hyper", "hyper-util", "http-body-util", "which"]
-docker = []
-all-backends = ["wasmer", "firecracker", "docker"]
+all-backends = ["wasmer", "firecracker"]
 
 [dev-dependencies]
 tempfile = "3"
