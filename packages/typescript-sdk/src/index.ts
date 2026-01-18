@@ -3,6 +3,8 @@ export { Bashlet } from "./client.js";
 
 // Type exports
 export type {
+  BackendType,
+  DockerOptions,
   BashletOptions,
   CreateSessionOptions,
   ExecOptions,
