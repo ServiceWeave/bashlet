@@ -13,7 +13,7 @@ from bashlet.errors import (
     CommandExecutionError,
     TimeoutError,
 )
-from bashlet.types import Mount
+from bashlet.types import BackendType, Mount
 
 
 class TestAsyncBashletInit:
@@ -44,6 +44,14 @@ class TestAsyncBashletInit:
         )
         assert bashlet._options.binary_path == "/custom/bashlet"
         assert bashlet._options.preset == "default"
+
+    def test_with_backend_string(self) -> None:
+        bashlet = AsyncBashlet(backend="docker")
+        assert bashlet._options.backend == BackendType.DOCKER
+
+    def test_with_backend_enum(self) -> None:
+        bashlet = AsyncBashlet(backend=BackendType.DOCKER)
+        assert bashlet._options.backend == BackendType.DOCKER
 
 
 class TestAsyncBashletExec:
@@ -103,6 +111,42 @@ class TestAsyncBashletExec:
             call_args = mock_create.call_args[0]
             assert "--mount" in call_args
             assert "/host:/guest:ro" in call_args
+
+    @pytest.mark.asyncio
+    async def test_exec_with_docker_backend(self) -> None:
+        with patch("asyncio.create_subprocess_exec") as mock_create:
+            mock_process = AsyncMock()
+            mock_process.communicate.return_value = (
+                json.dumps({"stdout": "", "stderr": "", "exit_code": 0}).encode(),
+                b"",
+            )
+            mock_process.returncode = 0
+            mock_create.return_value = mock_process
+
+            bashlet = AsyncBashlet()
+            await bashlet.exec("ls", backend="docker")
+
+            call_args = mock_create.call_args[0]
+            assert "--backend" in call_args
+            assert "docker" in call_args
+
+    @pytest.mark.asyncio
+    async def test_exec_with_default_backend(self) -> None:
+        with patch("asyncio.create_subprocess_exec") as mock_create:
+            mock_process = AsyncMock()
+            mock_process.communicate.return_value = (
+                json.dumps({"stdout": "", "stderr": "", "exit_code": 0}).encode(),
+                b"",
+            )
+            mock_process.returncode = 0
+            mock_create.return_value = mock_process
+
+            bashlet = AsyncBashlet(backend="docker")
+            await bashlet.exec("ls")
+
+            call_args = mock_create.call_args[0]
+            assert "--backend" in call_args
+            assert "docker" in call_args
 
     @pytest.mark.asyncio
     async def test_exec_timeout(self) -> None:

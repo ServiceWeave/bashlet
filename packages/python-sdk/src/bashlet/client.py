@@ -15,6 +15,7 @@ from .errors import (
     TimeoutError,
 )
 from .types import (
+    BackendType,
     BashletOptions,
     CommandResult,
     CreateSessionOptions,
@@ -59,6 +60,7 @@ class Bashlet:
         workdir: str | None = None,
         timeout: int = 300,
         config_path: str | None = None,
+        backend: BackendType | str | None = None,
     ) -> None:
         """
         Initialize a Bashlet client.
@@ -71,8 +73,17 @@ class Bashlet:
             workdir: Default working directory inside sandbox
             timeout: Command timeout in seconds (default: 300)
             config_path: Path to config file
+            backend: Sandbox backend to use (wasmer, firecracker, docker, auto)
         """
         from .types import EnvVar
+
+        # Convert string backend to BackendType enum
+        backend_type: BackendType | None = None
+        if backend is not None:
+            if isinstance(backend, str):
+                backend_type = BackendType(backend)
+            else:
+                backend_type = backend
 
         self._options = BashletOptions(
             binary_path=binary_path,
@@ -84,6 +95,7 @@ class Bashlet:
             workdir=workdir,
             timeout=timeout,
             config_path=config_path,
+            backend=backend_type,
         )
 
     # =========================================================================
@@ -99,6 +111,7 @@ class Bashlet:
         env_vars: list[tuple[str, str]] | None = None,
         workdir: str | None = None,
         timeout: int | None = None,
+        backend: BackendType | str | None = None,
     ) -> CommandResult:
         """
         Execute a one-shot command in an isolated sandbox.
@@ -110,6 +123,7 @@ class Bashlet:
             env_vars: Environment variables as (key, value) tuples
             workdir: Working directory inside sandbox
             timeout: Command timeout in seconds
+            backend: Sandbox backend to use (wasmer, firecracker, docker, auto)
 
         Returns:
             CommandResult with stdout, stderr, and exit code
@@ -118,6 +132,14 @@ class Bashlet:
             >>> result = bashlet.exec('echo "Hello World"')
             >>> print(result.stdout)  # "Hello World\\n"
         """
+        # Convert string backend to BackendType enum
+        backend_type: BackendType | None = None
+        if backend is not None:
+            if isinstance(backend, str):
+                backend_type = BackendType(backend)
+            else:
+                backend_type = backend
+
         options = self._merge_options(
             ExecOptions(
                 preset=preset,
@@ -127,6 +149,7 @@ class Bashlet:
                 env_vars=[],
                 workdir=workdir,
                 timeout=timeout,
+                backend=backend_type,
             ),
             env_vars,
         )
@@ -485,6 +508,7 @@ class Bashlet:
             ],
             workdir=options.workdir or self._options.workdir,
             timeout=options.timeout or self._options.timeout,
+            backend=options.backend or self._options.backend,
         )
 
     def _run_command(
@@ -541,6 +565,9 @@ class Bashlet:
 
         if options.preset:
             args.extend(["--preset", options.preset])
+
+        if options.backend:
+            args.extend(["--backend", options.backend.value])
 
         for mount in options.mounts:
             args.extend(["--mount", mount.to_cli_arg()])

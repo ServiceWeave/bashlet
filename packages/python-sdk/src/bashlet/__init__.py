@@ -35,9 +35,11 @@ from .errors import (
     TimeoutError,
 )
 from .types import (
+    BackendType,
     BashletOptions,
     CommandResult,
     CreateSessionOptions,
+    DockerOptions,
     EnvVar,
     ExecOptions,
     Mount,
@@ -52,8 +54,10 @@ __all__ = [
     "Bashlet",
     "AsyncBashlet",
     # Types
+    "BackendType",
     "BashletOptions",
     "CreateSessionOptions",
+    "DockerOptions",
     "ExecOptions",
     "CommandResult",
     "Session",

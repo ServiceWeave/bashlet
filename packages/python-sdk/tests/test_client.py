@@ -13,7 +13,7 @@ from bashlet.errors import (
     CommandExecutionError,
     TimeoutError,
 )
-from bashlet.types import Mount
+from bashlet.types import BackendType, Mount
 
 
 class TestBashletInit:
@@ -58,6 +58,14 @@ class TestBashletInit:
         assert bashlet._options.workdir == "/workspace"
         assert bashlet._options.timeout == 60
         assert bashlet._options.config_path == "/config.yaml"
+
+    def test_with_backend_string(self) -> None:
+        bashlet = Bashlet(backend="docker")
+        assert bashlet._options.backend == BackendType.DOCKER
+
+    def test_with_backend_enum(self) -> None:
+        bashlet = Bashlet(backend=BackendType.DOCKER)
+        assert bashlet._options.backend == BackendType.DOCKER
 
 
 class TestBashletExec:
@@ -151,6 +159,66 @@ class TestBashletExec:
         call_args = mock_run.call_args[0][0]
         assert "--preset" in call_args
         assert "node" in call_args
+
+    @patch("subprocess.run")
+    def test_exec_with_docker_backend(self, mock_run: MagicMock) -> None:
+        mock_run.return_value = MagicMock(
+            stdout=json.dumps({"stdout": "", "stderr": "", "exit_code": 0}),
+            stderr="",
+            returncode=0,
+        )
+
+        bashlet = Bashlet()
+        bashlet.exec("ls", backend="docker")
+
+        call_args = mock_run.call_args[0][0]
+        assert "--backend" in call_args
+        assert "docker" in call_args
+
+    @patch("subprocess.run")
+    def test_exec_with_backend_enum(self, mock_run: MagicMock) -> None:
+        mock_run.return_value = MagicMock(
+            stdout=json.dumps({"stdout": "", "stderr": "", "exit_code": 0}),
+            stderr="",
+            returncode=0,
+        )
+
+        bashlet = Bashlet()
+        bashlet.exec("ls", backend=BackendType.DOCKER)
+
+        call_args = mock_run.call_args[0][0]
+        assert "--backend" in call_args
+        assert "docker" in call_args
+
+    @patch("subprocess.run")
+    def test_default_backend_from_constructor(self, mock_run: MagicMock) -> None:
+        mock_run.return_value = MagicMock(
+            stdout=json.dumps({"stdout": "", "stderr": "", "exit_code": 0}),
+            stderr="",
+            returncode=0,
+        )
+
+        bashlet = Bashlet(backend="docker")
+        bashlet.exec("ls")
+
+        call_args = mock_run.call_args[0][0]
+        assert "--backend" in call_args
+        assert "docker" in call_args
+
+    @patch("subprocess.run")
+    def test_override_default_backend(self, mock_run: MagicMock) -> None:
+        mock_run.return_value = MagicMock(
+            stdout=json.dumps({"stdout": "", "stderr": "", "exit_code": 0}),
+            stderr="",
+            returncode=0,
+        )
+
+        bashlet = Bashlet(backend="wasmer")
+        bashlet.exec("ls", backend="docker")
+
+        call_args = mock_run.call_args[0][0]
+        assert "--backend" in call_args
+        assert "docker" in call_args
 
     @patch("subprocess.run")
     def test_exec_merges_default_options(self, mock_run: MagicMock) -> None:

@@ -1,5 +1,6 @@
 import { execa } from "execa";
 import type {
+  BackendType,
   BashletOptions,
   CreateSessionOptions,
   ExecOptions,
@@ -353,6 +354,7 @@ export class Bashlet {
       envVars: [...(this.defaultOptions.envVars ?? []), ...(options.envVars ?? [])],
       workdir: options.workdir ?? this.defaultOptions.workdir,
       timeout: options.timeout ?? this.defaultOptions.timeout ?? 300,
+      backend: options.backend ?? this.defaultOptions.backend,
     };
   }
 
@@ -423,6 +425,10 @@ export class Bashlet {
 
     if (options.preset) {
       args.push("--preset", options.preset);
+    }
+
+    if (options.backend) {
+      args.push("--backend", options.backend);
     }
 
     for (const mount of options.mounts ?? []) {

@@ -1,4 +1,21 @@
 /**
+ * Sandbox backend type
+ */
+export type BackendType = "wasmer" | "firecracker" | "docker" | "auto";
+
+/**
+ * Docker-specific configuration options
+ */
+export interface DockerOptions {
+  /** Custom Docker image name (default: bashlet-sandbox:latest) */
+  image?: string;
+  /** Enable networking in the container (default: false) */
+  enableNetworking?: boolean;
+  /** Enable session mode for persistent container (default: false) */
+  sessionMode?: boolean;
+}
+
+/**
  * Mount configuration for sandbox filesystem
  */
 export interface Mount {
@@ -36,6 +53,8 @@ export interface BashletOptions {
   timeout?: number;
   /** Path to config file */
   configPath?: string;
+  /** Sandbox backend to use (wasmer, firecracker, docker, auto) */
+  backend?: BackendType;
 }
 
 /**
@@ -70,6 +89,8 @@ export interface ExecOptions {
   workdir?: string;
   /** Command timeout in seconds */
   timeout?: number;
+  /** Sandbox backend to use (wasmer, firecracker, docker, auto) */
+  backend?: BackendType;
 }
 
 /**

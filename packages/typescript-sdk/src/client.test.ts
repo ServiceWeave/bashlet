@@ -160,6 +160,60 @@ describe("Bashlet", () => {
       );
     });
 
+    it("should execute command with docker backend", async () => {
+      mockedExeca.mockResolvedValueOnce({
+        stdout: JSON.stringify({ stdout: "", stderr: "", exit_code: 0 }),
+        stderr: "",
+        exitCode: 0,
+        timedOut: false,
+      } as never);
+
+      const bashlet = new Bashlet();
+      await bashlet.exec("ls", { backend: "docker" });
+
+      expect(mockedExeca).toHaveBeenCalledWith(
+        "bashlet",
+        expect.arrayContaining(["--backend", "docker"]),
+        expect.any(Object)
+      );
+    });
+
+    it("should use default backend from constructor", async () => {
+      mockedExeca.mockResolvedValueOnce({
+        stdout: JSON.stringify({ stdout: "", stderr: "", exit_code: 0 }),
+        stderr: "",
+        exitCode: 0,
+        timedOut: false,
+      } as never);
+
+      const bashlet = new Bashlet({ backend: "docker" });
+      await bashlet.exec("ls");
+
+      expect(mockedExeca).toHaveBeenCalledWith(
+        "bashlet",
+        expect.arrayContaining(["--backend", "docker"]),
+        expect.any(Object)
+      );
+    });
+
+    it("should override default backend with exec option", async () => {
+      mockedExeca.mockResolvedValueOnce({
+        stdout: JSON.stringify({ stdout: "", stderr: "", exit_code: 0 }),
+        stderr: "",
+        exitCode: 0,
+        timedOut: false,
+      } as never);
+
+      const bashlet = new Bashlet({ backend: "wasmer" });
+      await bashlet.exec("ls", { backend: "docker" });
+
+      expect(mockedExeca).toHaveBeenCalledWith(
+        "bashlet",
+        expect.arrayContaining(["--backend", "docker"]),
+        expect.any(Object)
+      );
+    });
+
     it("should merge default options with exec options", async () => {
       mockedExeca.mockResolvedValueOnce({
         stdout: JSON.stringify({ stdout: "", stderr: "", exit_code: 0 }),

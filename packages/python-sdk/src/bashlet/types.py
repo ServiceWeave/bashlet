@@ -3,7 +3,31 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from enum import Enum
 from typing import TypedDict
+
+
+class BackendType(str, Enum):
+    """Sandbox backend type."""
+
+    WASMER = "wasmer"
+    FIRECRACKER = "firecracker"
+    DOCKER = "docker"
+    AUTO = "auto"
+
+
+@dataclass
+class DockerOptions:
+    """Docker-specific configuration options."""
+
+    image: str | None = None
+    """Custom Docker image name (default: bashlet-sandbox:latest)."""
+
+    enable_networking: bool = False
+    """Enable networking in the container (default: false)."""
+
+    session_mode: bool = False
+    """Enable session mode for persistent container (default: false)."""
 
 
 class MountDict(TypedDict, total=False):
@@ -83,6 +107,9 @@ class BashletOptions:
     config_path: str | None = None
     """Path to config file."""
 
+    backend: BackendType | None = None
+    """Sandbox backend to use (wasmer, firecracker, docker, auto)."""
+
 
 @dataclass
 class CreateSessionOptions:
@@ -125,6 +152,9 @@ class ExecOptions:
 
     timeout: int | None = None
     """Command timeout in seconds."""
+
+    backend: BackendType | None = None
+    """Sandbox backend to use (wasmer, firecracker, docker, auto)."""
 
 
 @dataclass
