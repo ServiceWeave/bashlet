@@ -77,10 +77,17 @@ Sessions allow you to create persistent sandbox environments that maintain their
 bashlet create --name my-session --mount ./src:/workspace
 ```
 
-With TTL (time-to-live):
+With TTL (time-to-live) - session expires after idle time with no commands:
 
 ```bash
 bashlet create --name temp-session --mount ./data:/data --ttl 1h
+```
+
+You can also set a default idle timeout in your config so all sessions automatically expire:
+
+```toml
+[sandbox]
+default_idle_timeout = "30m"  # all sessions expire after 30 min of inactivity
 ```
 
 #### Run Commands in a Session
@@ -276,8 +283,11 @@ Mounts follow Docker-style syntax:
 
 ### TTL Syntax
 
+TTL is based on **idle time** - the session expires after the specified duration of no command execution. Each command resets the timer.
+
 | Format | Description |
 |--------|-------------|
+| `30s` | 30 seconds |
 | `30m` | 30 minutes |
 | `1h` | 1 hour |
 | `2d` | 2 days |
@@ -373,6 +383,7 @@ backend = "auto"  # auto, wasmer, or firecracker
 default_workdir = "/workspace"
 memory_limit_mb = 256
 timeout_seconds = 300
+default_idle_timeout = "1h"  # sessions expire after 1 hour of no activity
 
 [sandbox.firecracker]
 vcpu_count = 1

@@ -38,6 +38,8 @@ pub enum BackendType {
     Firecracker,
     /// Docker container sandbox
     Docker,
+    /// Remote server via SSH
+    Ssh,
     /// Automatically select the best available backend
     #[default]
     Auto,
@@ -54,12 +56,18 @@ pub struct SandboxConfig {
     pub memory_limit_mb: u64,
     /// Command timeout in seconds
     pub timeout_seconds: u64,
+    /// Default idle timeout for sessions (e.g., "30m", "1h", "2d")
+    /// Sessions will automatically expire after this duration of no command execution.
+    /// If not set, sessions have no expiration unless --ttl is specified.
+    pub default_idle_timeout: Option<String>,
     /// Wasmer-specific configuration
     pub wasmer: WasmerConfig,
     /// Firecracker-specific configuration
     pub firecracker: FirecrackerConfig,
     /// Docker-specific configuration
     pub docker: DockerConfig,
+    /// SSH-specific configuration
+    pub ssh: SshConfig,
 }
 
 impl Default for SandboxConfig {
@@ -69,9 +77,11 @@ impl Default for SandboxConfig {
             default_workdir: "/workspace".to_string(),
             memory_limit_mb: 256,
             timeout_seconds: 300,
+            default_idle_timeout: None,
             wasmer: WasmerConfig::default(),
             firecracker: FirecrackerConfig::default(),
             docker: DockerConfig::default(),
+            ssh: SshConfig::default(),
         }
     }
 }
@@ -135,6 +145,37 @@ impl Default for DockerConfig {
             build_image: true,
             enable_networking: false,
             session_mode: false,
+        }
+    }
+}
+
+/// SSH-specific configuration for remote execution.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(default)]
+pub struct SshConfig {
+    /// Remote host to connect to (hostname or IP address)
+    pub host: String,
+    /// SSH port (default: 22)
+    pub port: u16,
+    /// Username for SSH connection
+    pub user: String,
+    /// Path to SSH private key file (optional, uses ssh-agent or default keys if not set)
+    pub key_file: Option<PathBuf>,
+    /// Use SSH ControlMaster for persistent connections (default: true)
+    pub use_control_master: bool,
+    /// Timeout for SSH connection in seconds (default: 30)
+    pub connect_timeout: u64,
+}
+
+impl Default for SshConfig {
+    fn default() -> Self {
+        Self {
+            host: String::new(),
+            port: 22,
+            user: String::new(),
+            key_file: None,
+            use_control_master: true,
+            connect_timeout: 30,
         }
     }
 }

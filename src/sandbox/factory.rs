@@ -10,6 +10,7 @@ use crate::sandbox::backends::WasmerBackend;
 use crate::sandbox::backends::FirecrackerBackend;
 
 use crate::sandbox::backends::DockerBackend;
+use crate::sandbox::backends::SshBackend;
 
 /// Runtime configuration for creating a sandbox backend.
 ///
@@ -87,6 +88,16 @@ pub async fn create_backend(
             Ok(Box::new(backend))
         }
 
+        BackendType::Ssh => {
+            let backend = SshBackend::new(
+                config.ssh.clone(),
+                runtime.env_vars,
+                runtime.workdir,
+            )
+            .await?;
+            Ok(Box::new(backend))
+        }
+
         BackendType::Auto => {
             // Already resolved by resolve_backend_type
             unreachable!()
@@ -145,6 +156,15 @@ fn resolve_backend_type(requested: &BackendType) -> Result<BackendType> {
                 });
             }
             Ok(BackendType::Docker)
+        }
+        BackendType::Ssh => {
+            if !SshBackend::is_available() {
+                return Err(BashletError::BackendNotAvailable {
+                    backend: "ssh".to_string(),
+                    reason: "SSH client is not installed or not accessible.".to_string(),
+                });
+            }
+            Ok(BackendType::Ssh)
         }
         other => Ok(other.clone()),
     }
@@ -214,6 +234,17 @@ pub fn available_backends() -> Vec<BackendInfo> {
             None
         } else {
             Some("Docker daemon not accessible")
+        },
+    });
+
+    backends.push(BackendInfo {
+        name: "ssh",
+        available: SshBackend::is_available(),
+        description: "Remote server via SSH",
+        unavailable_reason: if SshBackend::is_available() {
+            None
+        } else {
+            Some("SSH client not installed")
         },
     });
 

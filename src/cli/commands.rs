@@ -103,10 +103,13 @@ pub async fn create(args: CreateArgs, config: BashletConfig, format: OutputForma
         }
     }
 
-    // Parse TTL if provided
+    // Parse TTL if provided, otherwise use default from config
     let ttl_seconds = match &args.ttl {
         Some(ttl_str) => Some(parse_ttl(ttl_str)?),
-        None => None,
+        None => match &config.sandbox.default_idle_timeout {
+            Some(default_ttl) => Some(parse_ttl(default_ttl)?),
+            None => None,
+        },
     };
 
     // Handle legacy --wasm flag by updating wasmer config
@@ -206,10 +209,13 @@ pub async fn run(args: SessionRunArgs, config: BashletConfig, format: OutputForm
         Err(crate::error::BashletError::SessionNotFound { .. }) if args.create => {
             info!(session = %args.session, "Session not found, creating new session");
 
-            // Parse TTL if provided
+            // Parse TTL if provided, otherwise use default from config
             let ttl_seconds = match &args.ttl {
                 Some(ttl_str) => Some(parse_ttl(ttl_str)?),
-                None => None,
+                None => match &config.sandbox.default_idle_timeout {
+                    Some(default_ttl) => Some(parse_ttl(default_ttl)?),
+                    None => None,
+                },
             };
 
             // Prepare mutable args for preset merging

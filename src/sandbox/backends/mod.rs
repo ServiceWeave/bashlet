@@ -11,5 +11,7 @@ mod firecracker;
 pub use firecracker::FirecrackerBackend;
 
 mod docker;
+mod ssh;
 
 pub use docker::DockerBackend;
+pub use ssh::SshBackend;
