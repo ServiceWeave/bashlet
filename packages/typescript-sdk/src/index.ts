@@ -5,6 +5,7 @@ export { Bashlet } from "./client.js";
 export type {
   BackendType,
   DockerOptions,
+  SshOptions,
   BashletOptions,
   CreateSessionOptions,
   ExecOptions,

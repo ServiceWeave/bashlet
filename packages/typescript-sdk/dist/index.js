@@ -1,5 +1,9 @@
 import { z } from 'zod';
 import { execa } from 'execa';
+import { tmpdir } from 'os';
+import { join } from 'path';
+import { writeFileSync, existsSync, unlinkSync } from 'fs';
+import { randomBytes } from 'crypto';
 
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -773,7 +777,9 @@ var Bashlet = class {
       mounts: [...this.defaultOptions.mounts ?? [], ...options.mounts ?? []],
       envVars: [...this.defaultOptions.envVars ?? [], ...options.envVars ?? []],
       workdir: options.workdir ?? this.defaultOptions.workdir,
-      timeout: options.timeout ?? this.defaultOptions.timeout ?? 300
+      timeout: options.timeout ?? this.defaultOptions.timeout ?? 300,
+      backend: options.backend ?? this.defaultOptions.backend,
+      ssh: options.ssh ?? this.defaultOptions.ssh
     };
   }
   async runCommand(args, timeoutSeconds) {
@@ -820,10 +826,19 @@ var Bashlet = class {
       );
     }
   }
+  /** Track temp config files for cleanup */
+  tempConfigFiles = [];
   buildExecArgs(command, options) {
     const args = [];
     if (options.preset) {
       args.push("--preset", options.preset);
+    }
+    if (options.backend) {
+      args.push("--backend", options.backend);
+    }
+    if (options.ssh) {
+      const configPath = this.createSshConfigFile(options.ssh);
+      args.push("--config", configPath);
     }
     for (const mount of options.mounts ?? []) {
       const mountStr = mount.readonly ? `${mount.hostPath}:${mount.guestPath}:ro` : `${mount.hostPath}:${mount.guestPath}`;
@@ -837,6 +852,42 @@ var Bashlet = class {
     }
     args.push(command);
     return args;
+  }
+  /**
+   * Create a temporary config file with SSH settings.
+   * The file is automatically cleaned up when the client is garbage collected.
+   */
+  createSshConfigFile(ssh) {
+    const config = {
+      ssh: {
+        host: ssh.host,
+        port: ssh.port ?? 22,
+        user: ssh.user,
+        key_file: ssh.keyFile,
+        use_control_master: ssh.useControlMaster ?? true,
+        connect_timeout: ssh.connectTimeout ?? 30
+      }
+    };
+    const configId = randomBytes(8).toString("hex");
+    const configPath = join(tmpdir(), `bashlet-ssh-${configId}.json`);
+    writeFileSync(configPath, JSON.stringify(config, null, 2));
+    this.tempConfigFiles.push(configPath);
+    return configPath;
+  }
+  /**
+   * Clean up temporary config files.
+   * Called automatically but can also be called manually.
+   */
+  cleanup() {
+    for (const configPath of this.tempConfigFiles) {
+      if (existsSync(configPath)) {
+        try {
+          unlinkSync(configPath);
+        } catch {
+        }
+      }
+    }
+    this.tempConfigFiles = [];
   }
   buildCreateArgs(options) {
     const args = [];

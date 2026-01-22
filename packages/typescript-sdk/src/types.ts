@@ -1,7 +1,7 @@
 /**
  * Sandbox backend type
  */
-export type BackendType = "wasmer" | "firecracker" | "docker" | "auto";
+export type BackendType = "wasmer" | "firecracker" | "docker" | "ssh" | "auto";
 
 /**
  * Docker-specific configuration options
@@ -13,6 +13,24 @@ export interface DockerOptions {
   enableNetworking?: boolean;
   /** Enable session mode for persistent container (default: false) */
   sessionMode?: boolean;
+}
+
+/**
+ * SSH-specific configuration options
+ */
+export interface SshOptions {
+  /** SSH host to connect to */
+  host: string;
+  /** SSH port (default: 22) */
+  port?: number;
+  /** SSH username */
+  user: string;
+  /** Path to private key file */
+  keyFile?: string;
+  /** Use SSH ControlMaster for connection multiplexing (default: true) */
+  useControlMaster?: boolean;
+  /** Connection timeout in seconds (default: 30) */
+  connectTimeout?: number;
 }
 
 /**
@@ -53,8 +71,10 @@ export interface BashletOptions {
   timeout?: number;
   /** Path to config file */
   configPath?: string;
-  /** Sandbox backend to use (wasmer, firecracker, docker, auto) */
+  /** Sandbox backend to use (wasmer, firecracker, docker, ssh, auto) */
   backend?: BackendType;
+  /** SSH configuration (required when backend is 'ssh') */
+  ssh?: SshOptions;
 }
 
 /**
@@ -89,8 +109,10 @@ export interface ExecOptions {
   workdir?: string;
   /** Command timeout in seconds */
   timeout?: number;
-  /** Sandbox backend to use (wasmer, firecracker, docker, auto) */
+  /** Sandbox backend to use (wasmer, firecracker, docker, ssh, auto) */
   backend?: BackendType;
+  /** SSH configuration (required when backend is 'ssh') */
+  ssh?: SshOptions;
 }
 
 /**

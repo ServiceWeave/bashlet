@@ -1,4 +1,4 @@
-export { B as Bashlet, e as BashletJsonOutput, a as BashletOptions, b as CommandResult, C as CreateSessionOptions, c as EnvVar, E as ExecOptions, M as Mount, S as Session, f as SessionListItem, d as ToolDefinition, T as ToolOperation } from './client-CZ5pOic9.cjs';
+export { a as BackendType, B as Bashlet, g as BashletJsonOutput, b as BashletOptions, c as CommandResult, C as CreateSessionOptions, D as DockerOptions, e as EnvVar, E as ExecOptions, M as Mount, d as Session, h as SessionListItem, S as SshOptions, f as ToolDefinition, T as ToolOperation } from './client-B-jVT1DT.cjs';
 export { E as ExecInput, L as ListDirInput, R as ReadFileInput, W as WriteFileInput, e as execSchema, l as listDirSchema, r as readFileSchema, w as writeFileSchema } from './zod-BlfQ35iM.cjs';
 export { J as JSONSchema, e as execJsonSchema, l as listDirJsonSchema, r as readFileJsonSchema, w as writeFileJsonSchema } from './json-schema-Be2SVjL0.cjs';
 export { MCPToolContent, MCPToolDefinition, MCPToolHandler, MCPToolResult, createMCPServer, generateMCPTools } from './tools/mcp.cjs';

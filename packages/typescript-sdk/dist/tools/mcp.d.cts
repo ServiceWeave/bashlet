@@ -1,4 +1,4 @@
-import { B as Bashlet } from '../client-CZ5pOic9.cjs';
+import { B as Bashlet } from '../client-B-jVT1DT.cjs';
 import { J as JSONSchema } from '../json-schema-Be2SVjL0.cjs';
 
 /**

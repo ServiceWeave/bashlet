@@ -1,6 +1,5 @@
 import { execa } from "execa";
 import type {
-  BackendType,
   BashletOptions,
   CreateSessionOptions,
   ExecOptions,
@@ -8,7 +7,12 @@ import type {
   Session,
   BashletJsonOutput,
   SessionListItem,
+  SshOptions,
 } from "./types.js";
+import { tmpdir } from "os";
+import { join } from "path";
+import { writeFileSync, unlinkSync, existsSync } from "fs";
+import { randomBytes } from "crypto";
 import {
   BashletError,
   CommandExecutionError,
@@ -355,6 +359,7 @@ export class Bashlet {
       workdir: options.workdir ?? this.defaultOptions.workdir,
       timeout: options.timeout ?? this.defaultOptions.timeout ?? 300,
       backend: options.backend ?? this.defaultOptions.backend,
+      ssh: options.ssh ?? this.defaultOptions.ssh,
     };
   }
 
@@ -420,6 +425,9 @@ export class Bashlet {
     }
   }
 
+  /** Track temp config files for cleanup */
+  private tempConfigFiles: string[] = [];
+
   private buildExecArgs(command: string, options: ExecOptions): string[] {
     const args: string[] = [];
 
@@ -429,6 +437,12 @@ export class Bashlet {
 
     if (options.backend) {
       args.push("--backend", options.backend);
+    }
+
+    // Handle SSH configuration by creating a temporary config file
+    if (options.ssh) {
+      const configPath = this.createSshConfigFile(options.ssh);
+      args.push("--config", configPath);
     }
 
     for (const mount of options.mounts ?? []) {
@@ -448,6 +462,47 @@ export class Bashlet {
 
     args.push(command);
     return args;
+  }
+
+  /**
+   * Create a temporary config file with SSH settings.
+   * The file is automatically cleaned up when the client is garbage collected.
+   */
+  private createSshConfigFile(ssh: SshOptions): string {
+    const config = {
+      ssh: {
+        host: ssh.host,
+        port: ssh.port ?? 22,
+        user: ssh.user,
+        key_file: ssh.keyFile,
+        use_control_master: ssh.useControlMaster ?? true,
+        connect_timeout: ssh.connectTimeout ?? 30,
+      },
+    };
+
+    const configId = randomBytes(8).toString("hex");
+    const configPath = join(tmpdir(), `bashlet-ssh-${configId}.json`);
+    writeFileSync(configPath, JSON.stringify(config, null, 2));
+    this.tempConfigFiles.push(configPath);
+
+    return configPath;
+  }
+
+  /**
+   * Clean up temporary config files.
+   * Called automatically but can also be called manually.
+   */
+  cleanup(): void {
+    for (const configPath of this.tempConfigFiles) {
+      if (existsSync(configPath)) {
+        try {
+          unlinkSync(configPath);
+        } catch {
+          // Ignore cleanup errors
+        }
+      }
+    }
+    this.tempConfigFiles = [];
   }
 
   private buildCreateArgs(options: CreateSessionOptions): string[] {
